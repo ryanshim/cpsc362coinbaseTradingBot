@@ -14,6 +14,8 @@ class Account():
         # initial setup
         auth = CoinbaseWalletAuth() 
 
+        # this is where member variables will go
+
     def get_acct_name(self):
         # add acct name function here
         return
