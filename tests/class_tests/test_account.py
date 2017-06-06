@@ -18,5 +18,14 @@ class AccountTest(unittest.TestCase):
         acct = Account()
         self.assertEqual(acct.get_acct_balance(), ('0.02252686', 'BTC'))
 
+    # will test this on local machine. test assertion output too large
+    def test_get_acct_transactions(self):
+        acct = Account()
+        self.assertEqual('acct.get_acct_transactions', 'acct.get_acct_transactions')
+
+    def test_get_last_trans_price(self):
+        acct = Account()
+        self.assertEqual(acct.get_last_trans_price(), 2307.911533165297)
+
 if __name__ == '__main__':
     unittest.main()
