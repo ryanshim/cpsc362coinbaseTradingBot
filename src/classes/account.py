@@ -27,3 +27,10 @@ class Account():
         # the variables in the tuple above are string types
         return
 
+    def get_acct_transactions(self):
+        # add function to get list of transactions here
+        return
+
+    def get_last_transaction_price(self):
+        # add function to get last transaction price here
+        return
