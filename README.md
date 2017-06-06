@@ -1,7 +1,7 @@
 # cpsc362coinbaseTradingBot
 Project for CPSC 362 - Foundations of Software Engineering.
 
-Team Members
+###### Team Members
 * Pablo Pelayo - jrpelayo13@csu.fullerton.edu
 * Kevin Pham - kpham163@csu.fullerton.edu
 * Ryan Shim - ryan.shim@gmail.com
