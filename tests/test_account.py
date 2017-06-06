@@ -1,6 +1,8 @@
 '''
 Account class unit tests
 '''
+import sys
+sys.path.append('../src/')
 import unittest
 from account import Account
 
