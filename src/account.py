@@ -11,23 +11,28 @@ class Account():
         # initialize generic api url
         self.api_url = "https://api.coinbase.com/v2/"
 
+        # initial setup on instantiation
+        auth = CoinbaseWalletAuth() # call authentication class
+
         # initial setup
-        auth = CoinbaseWalletAuth() 
+        self.acct_id = ''
+        self.acct_name = ''
+        self.acct_balance = 0
 
         # this is where member variables will go
 
     def get_acct_name(self):
         # add acct name function here
-        return
+        return self.acct_name
 
     def get_acct_id(self):
         # add acct id function here
-        return
+        return self.acct_id
 
     def get_acct_balance(self):
         # get current balance in this form (balance, currency_type)
         # the variables in the tuple above are string types
-        return
+        return self.acct_balance
 
     def get_acct_transactions(self):
         # add function to get list of transactions here
