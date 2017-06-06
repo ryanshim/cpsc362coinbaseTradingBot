@@ -5,7 +5,7 @@ import hmac, hashlib, time, requests, json
 
 class CoinbaseWalletAuth():
     def __init__(self):
-        self.api_key = b"API KEY HERE"
+        self.api_key = b"API_KEY_HERE"
         self.secret_key = b"API_SECRET_HERE"
 
     def __call__(self, request):
@@ -22,5 +22,3 @@ class CoinbaseWalletAuth():
                 'CB-VERSION': vers_header,
             })
         return request
-
-
