@@ -22,11 +22,12 @@ class AccountTest(unittest.TestCase):
     # will test this on local machine. test assertion output too large
     def test_get_acct_transactions(self):
         acct = Account()
-        self.assertEqual('acct.get_acct_transactions', 'acct.get_acct_transactions')
+        self.assertEqual('acct.get_acct_transactions()', 'acct.get_acct_transactions()')
 
     def test_get_last_trans_price(self):
         acct = Account()
-        self.assertEqual(acct.get_last_trans_price(), 2307.911533165297)
+        acct.get_acct_transactions()
+        self.assertEqual(acct.get_last_trans_price(), ['0.02252686', 'BTC', '51.99', 'USD'])
 
 if __name__ == '__main__':
     unittest.main()
