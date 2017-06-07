@@ -7,7 +7,6 @@ import unittest
 from account import Account
 
 class AccountTest(unittest.TestCase):
-
     def test_get_acct_name(self):
         acct = Account()
         self.assertEqual(acct.get_acct_name(), 'My Wallet')
