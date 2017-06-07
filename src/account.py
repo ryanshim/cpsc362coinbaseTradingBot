@@ -21,6 +21,7 @@ class Account():
         self.acct_id = output['data'][0]['id'] 
         self.acct_name = output['data'][0]['name']
         self.acct_balance = 0
+        self.acct_last_trans_price = []
 
         # this is where member variables will go
 
@@ -48,9 +49,26 @@ class Account():
         return self.acct_balance, curr_type
 
     def get_acct_transactions(self):
-        # add function to get list of transactions here
-        return
+        account_id = self.get_acct_id()
+        auth = CoinbaseWalletAuth()
+        request_transaction = requests.get(self.api_url + \
+                                           'accounts/' + \
+                                           account_id + \
+                                           '/transactions', auth=auth).json()
+        output = dict(request_transaction)
 
-    def get_last_transaction_price(self):
-        # add function to get last transaction price here
-        return
+        i = 0
+        trans_list = []
+        for i in range(5):
+            trans_list.append(output['data'][i])
+
+        self.acct_last_trans_price.append(output['data'][0]['amount']['amount'])
+        self.acct_last_trans_price.append(output['data'][0]['amount']['currency'])
+        self.acct_last_trans_price.append(output['data'][0]['native_amount']['amount'])
+        self.acct_last_trans_price.append(output['data'][0]['native_amount']['currency'])
+
+        return trans_list
+
+    # returns a list containing 2 k,v pairs for amount and native amt as keys
+    def get_last_trans_price(self):
+        return self.acct_last_trans_price
