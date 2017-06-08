@@ -16,7 +16,6 @@ class Account():
         req = requests.get(self.api_url + 'accounts', auth=auth)
         output = dict(req.json())
 
-
         # initial setup
         self.acct_id = output['data'][0]['id'] 
         self.acct_name = output['data'][0]['name']
