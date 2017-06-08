@@ -74,5 +74,6 @@ class Account():
         return self.acct_last_trans_amt
 
     def get_last_trans_price(self):
+		# pablo github test
         return self.acct_last_trans_price
 
