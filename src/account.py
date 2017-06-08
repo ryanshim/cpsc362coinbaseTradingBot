@@ -20,7 +20,8 @@ class Account():
         self.acct_id = output['data'][0]['id'] 
         self.acct_name = output['data'][0]['name']
         self.acct_balance = 0
-        self.acct_last_trans_price = []
+        self.acct_last_trans_amt = []
+        self.acct_last_trans_price = 0
 
         # this is where member variables will go
 
@@ -69,5 +70,9 @@ class Account():
         return trans_list
 
     # returns a list containing 2 k,v pairs for amount and native amt as keys
+    def get_last_trans_amt(self):
+        return self.acct_last_trans_amt
+
     def get_last_trans_price(self):
         return self.acct_last_trans_price
+
