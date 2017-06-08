@@ -14,9 +14,20 @@ class Data():
         # initial setup
         auth = CoinbaseWalletAuth()
 
+        # member variables
+        self.spot_price_amt = 0
+        self.spot_price_currency = ''
+
     # current market btc price
     def get_spot_price():
-        return
+        auth = CoinbaseWalletAuth()
+        req = requests.get(self.api_url + 'prices/BTC-USD/spot', auth=auth)
+        output = dict(req.json())
+
+        self.spot_price_amt = output['data']['amount']
+        self.spot_price_currency = output['data']['currency']
+
+        return [self.spot_price_amt, self.spot_price_currency]
 
     # get historical prices of beg each month
     # from the last 6 months
@@ -30,10 +41,10 @@ class Data():
 
     # get historical prices of beg of each day
     # from the current week
-    def get_price_hist_cur_week():
+    def get_price_hist_cur_wk():
         return
 
     # get historical prices of each hour
     # from current day to the current hour
-    def get_price_hist_cur_hour():
+    def get_price_hist_cur_hr():
         return
