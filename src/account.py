@@ -62,10 +62,10 @@ class Account():
         for i in range(5):
             trans_list.append(output['data'][i])
 
-        self.acct_last_trans_price.append(output['data'][0]['amount']['amount'])
-        self.acct_last_trans_price.append(output['data'][0]['amount']['currency'])
-        self.acct_last_trans_price.append(output['data'][0]['native_amount']['amount'])
-        self.acct_last_trans_price.append(output['data'][0]['native_amount']['currency'])
+        self.acct_last_trans_amt.append(output['data'][0]['amount']['amount'])
+        self.acct_last_trans_amt.append(output['data'][0]['amount']['currency'])
+        self.acct_last_trans_amt.append(output['data'][0]['native_amount']['amount'])
+        self.acct_last_trans_amt.append(output['data'][0]['native_amount']['currency'])
 
         return trans_list
 
