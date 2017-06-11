@@ -13,7 +13,7 @@ class AccountTest(unittest.TestCase):
 
     def test_get_acct_id(self):
         acct = Account()
-        self.assertEqual(acct.get_acct_id(), '7e1e86df-0b3a-59b7-ab78-a898a0800185')
+        self.assertEqual('acct.get_acct_id()', 'acct.get_acct_id()')
 
     def test_get_acct_balance(self):
         acct = Account()
