@@ -23,8 +23,6 @@ class Account():
         self.acct_last_trans_amt = []
         self.acct_last_trans_price = 0
 
-        # this is where member variables will go
-
     # retrieve account name
     def get_acct_name(self):
         return self.acct_name
