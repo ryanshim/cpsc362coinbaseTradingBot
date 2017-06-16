@@ -66,33 +66,47 @@ class Main_Page(tk.Frame):
 
         # Draw data
         # draw account name label
-        acct_name_lbl = tk.Label(self, text="ACCOUNT NAME:\t\t" + acct_1.get_acct_name())
-        acct_name_lbl.place(x=(WIN_LENGTH / 100), y=50)
+        acct_name_hdr = tk.Label(self,
+                                     text="ACCOUNT NAME:\t\t",
+                                     font=HEADER_FONT)
+        acct_name_hdr.place(x=(WIN_LENGTH / 100), y=50)
+        acct_name_lbl = tk.Label(self, text=acct_1.get_acct_name())
+        acct_name_lbl.place(x=(WIN_LENGTH / 100 + 225), y=50)
 
         # draw account id label
-        acct_id_lbl = tk.Label(self, text="ACCOUNT ID:\t\t" + acct_1.get_acct_id())
-        acct_id_lbl.place(x=(WIN_LENGTH / 100), y=70)
+        acct_id_hdr_lbl = tk.Label(self,
+                                   text="ACCOUNT ID:\t\t",
+                                   font=HEADER_FONT)
+        acct_id_hdr_lbl.place(x=(WIN_LENGTH / 100), y=70)
+        acct_id_lbl = tk.Label(self, text=acct_1.get_acct_id())
+        acct_id_lbl.place(x=(WIN_LENGTH / 100 + 225), y=70)
+
+        # draw account balance label
+        acct_bal_hdr = tk.Label(self, text="CURRENT ACCOUNT BALANCE:", font=HEADER_FONT)
+        acct_bal_hdr.place(x=(WIN_LENGTH / 100), y=90)
+
+        # draw current price header
+        price_lbl = tk.Label(self, text="CURRENT BTC PRICE: ", font=HEADER_FONT)
+        price_lbl.place(x=(WIN_LENGTH - 250), y=50)
 
         # 1st thread (draw account balance)
         _thread.start_new_thread(self.draw_balance, (acct_1, 60))
 
         # 2nd thread (draw account transactions)
         trans_lbl = tk.Label(self, text="RECENT TRANSACTIONS", font=HEADER_FONT)
-        trans_lbl.place(x=(WIN_LENGTH / 2 - 50), y=140)
+        trans_lbl.place(x=(WIN_LENGTH / 2 - 50), y=145)
         _thread.start_new_thread(self.draw_transactions, (acct_1, 60))
 
         # 3rd thread (draw current spot price)
-        price_lbl = tk.Label(self, text="CURRENT BTC PRICE: ")
-        price_lbl.place(x=(WIN_LENGTH - 250), y=50)
+
         _thread.start_new_thread(self.draw_spot_price, (data_1, 30))
 
     # draw the current account balance to the tkinter window
     def draw_balance(self, account, delay):
         while 1:
             bal, bal_curr = account.get_acct_balance()
-            bal_lbl = tk.Label(self, text="Current Account Balance:\t" + \
-                               bal + " " + bal_curr)
-            bal_lbl.place(x=(WIN_LENGTH / 100), y=90)
+            bal_lbl = tk.Label(self, text=bal + " " + bal_curr) 
+            bal_lbl.place(x=(WIN_LENGTH / 100 + 225), y=90)
             time.sleep(delay)
 
     def draw_spot_price(self, data, delay):
@@ -111,18 +125,18 @@ class Main_Page(tk.Frame):
             spacing = 0
 
             for i in range(5):
-                key_str = 'trans' + str(i) + '_lbl'
-                lbl[key_str] = tk.Label(self,
-                                        text="{0}\t{1}\t{2} {3} ~ {4} {5}\t\t{6}".format(
+                lbl[i] = tk.Label(self,
+                        text="{0:30s}{1:10s}{2:13s}{3:6s}{4:4s}{5:8s}{6:12s}{7}".format(
                                         trans_lst[i]['created_at'],
                                         trans_lst[i]['type'].upper(),
                                         str(trans_lst[i]['amount']['amount']),
                                         trans_lst[i]['amount']['currency'],
+                                        "~",
                                         trans_lst[i]['native_amount']['amount'],
                                         trans_lst[i]['native_amount']['currency'],
-                                        trans_lst[i]['status']))
-                lbl[key_str].place(x=(WIN_WIDTH // 4), y=(160 + spacing))
-                spacing += 20
+                                        trans_lst[i]['status'].upper()))
+                lbl[i].place(x=(WIN_WIDTH // 2.5), y=(170 + spacing))
+                spacing += 30
 
             time.sleep(delay)
 
