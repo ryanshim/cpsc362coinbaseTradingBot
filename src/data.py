@@ -122,6 +122,64 @@ class Data():
         return prices
 
     '''
+    get prices of the past 3 years
+    '''
+    def get_3yr_daily_price(self):
+        curr_date = dt.datetime.today().date()
+
+        with open('prices.txt', 'r') as infile:
+            last_update = infile.readline()
+
+        # same day update condition
+        # if last updated day is different, populate data
+        # file with new price data
+        if (last_update != str(curr_date) + "\n"):
+            outfile = open('prices.txt', 'w')
+            outfile.write(str(curr_date) + "\n")
+
+            for i in range(1,1095): # daily prices for 3 years
+                print("Retrieving day - " + str(i))
+                time_point = dt.date.today() - dt.timedelta(days=i)
+
+                try:
+                    auth = CoinbaseWalletAuth()
+                    req = requests.get(self.api_url + 'prices/BTC-USD/spot',
+                                       'date=' + str(time_point), auth=auth)
+                except RuntimeError:
+                    print("Could not retrieve price")
+
+                output = dict(req.json())
+                spot_amt = output['data']['amount']
+
+                outfile.write(str(time_point) + "\t" + spot_amt + "\n")
+            outfile.close()
+
+        print("Prices saved")
+
+
+    '''
+    Parse price data from txt file
+    '''
+    def parse_prices_file(self):
+        infile = open('prices.txt', 'r')
+
+        lst_prices = []
+        lst_dates = []
+
+        last_update = infile.readline()
+
+        for i in range(1,1095):
+            line = infile.readline().split("\t")
+            line[1] = line[1].strip("\n")
+            lst_prices.append(line[1])
+            lst_dates.append(dt.datetime.strptime(line[0], "%Y-%m-%d"))
+
+        infile.close()
+
+        return lst_prices, lst_dates
+
+
+    '''
     get the exchange ranges for the
     top 5 most used currencies
     '''
