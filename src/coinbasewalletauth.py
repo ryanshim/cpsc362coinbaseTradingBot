@@ -8,7 +8,6 @@ class CoinbaseWalletAuth():
         self.api_key = b"API_KEY_HERE"
         self.secret_key = b"API_SECRET_HERE"
 
-
     def __call__(self, request):
         timestamp = str(int(time.time()))
         message = timestamp + request.method + request.path_url + (request.body or '')
