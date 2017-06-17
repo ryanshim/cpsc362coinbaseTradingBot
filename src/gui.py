@@ -9,6 +9,12 @@ import time
 import tkinter as tk
 from tkinter import ttk
 
+# matplot lib imports
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg 
+
 # backend class imports
 from account import Account
 #from analysis import Analysis
@@ -45,16 +51,71 @@ class Gui(tk.Tk):
         frame.tkraise()
 
 
+
+
+
+
+'''
+Main Opening Window
+'''
 class Main_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Coinbase Trading Application", font=LARGE_FONT)
         label.place(x=(WIN_LENGTH/2 - 100), y=30)
-        #label.pack(pady=10, padx=10)
 
+        # create navigation buttons
         acct_btn = ttk.Button(self, text="Coinbase Account Information",
                             command=lambda: controller.show_frame(Account_Page))
         acct_btn.place(x=0, y=0)
+
+        data_btn = ttk.Button(self, text="BTC Data Information",
+                            command=lambda: controller.show_frame(Data_Page))
+        data_btn.place(x=300, y=0)
+
+        # instantiate primary object
+        data_1 = Data()
+
+        # retrieve daily btc prices for
+        # past 3 years
+        data_1.get_3yr_daily_price()
+        lst_prices, lst_dates = data_1.parse_prices_file()
+
+        # insert an overview of prices of btc
+        # for past 3 years
+        f = matplotlib.figure.Figure(figsize=(8,4), dpi=100)
+        a = f.add_subplot(111)
+        a.plot(lst_dates, lst_prices)
+        
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        canvas.get_tk_widget().place(x=(WIN_LENGTH // 10), y=80)
+
+        # matplotlib toolbar
+        '''
+        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.place(x=(WIN_LENGTH // 10), y=80)
+        '''
+
+
+
+
+
+
+'''
+Account information page
+'''
+class Account_Page(tk.Frame):
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Coinbase Account Page", font=LARGE_FONT)
+        label.place(x=(WIN_LENGTH/2 - 100), y=30)
+
+        main_btn = ttk.Button(self, text="Back to Main Page",
+                            command=lambda: controller.show_frame(Main_Page))
+        main_btn.place(x=0, y=0)
 
         data_btn = ttk.Button(self, text="BTC Data Information",
                             command=lambda: controller.show_frame(Data_Page))
@@ -94,7 +155,7 @@ class Main_Page(tk.Frame):
 
         # 2nd thread (draw account transactions)
         trans_lbl = tk.Label(self, text="RECENT TRANSACTIONS", font=HEADER_FONT)
-        trans_lbl.place(x=(WIN_LENGTH / 2 - 50), y=145)
+        trans_lbl.place(x=(WIN_LENGTH / 2 - 75), y=145)
         _thread.start_new_thread(self.draw_transactions, (acct_1, 60))
 
         # 3rd thread (draw current spot price)
@@ -139,25 +200,6 @@ class Main_Page(tk.Frame):
                 spacing += 30
 
             time.sleep(delay)
-
-
-
-
-
-
-class Account_Page(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Coinbase Account Page", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
-
-        button1 = ttk.Button(self, text="BTC Data Information",
-                            command=lambda: controller.show_frame(Data_Page))
-        button1.pack()
-
-        button2 = ttk.Button(self, text="Back to Main Page",
-                            command=lambda: controller.show_frame(Main_Page))
-        button2.pack()
 
 
 class Data_Page(tk.Frame):
