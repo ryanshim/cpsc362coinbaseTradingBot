@@ -125,42 +125,79 @@ class Data():
     get prices of the past 3 years
     '''
     def get_3yr_daily_price(self):
-        curr_date = dt.datetime.today().date()
+        if self.is_update():
+            # calc num of days past since last update
+            curr_date = dt.datetime.today().date()
+            days_delta = self.get_diff_days()
 
-        with open('prices.txt', 'r') as infile:
-            last_update = infile.readline()
-
-        # same day update condition
-        # if last updated day is different, populate data
-        # file with new price data
-        if (last_update != str(curr_date) + "\n"):
+            # retrieve existing price data
+            with open('prices.txt', 'r') as infile:
+                infile.readline() # skip over the last updated line
+                prices = infile.readlines()
+            
+            # write new price data
             outfile = open('prices.txt', 'w')
             outfile.write(str(curr_date) + "\n")
 
-            for i in range(1,1095): # daily prices for 3 years
-                print("Retrieving day - " + str(i))
+            # add the missing days between updates
+            for i in range(1, days_delta+1):
+                #print("Retrieving day minus " + str(i))
                 time_point = dt.date.today() - dt.timedelta(days=i)
 
+                # api call
                 try:
                     auth = CoinbaseWalletAuth()
-                    req = requests.get(self.api_url + 'prices/BTC-USD/spot',
-                                       'date=' + str(time_point), auth=auth)
+                    req = requests.get(self.api_url + "prices/BTC-USD/spot",
+                                       "date=" + str(time_point), auth=auth)
                 except RuntimeError:
-                    print("Could not retrieve price")
+                    print("Could not retrieve price for today minus " + str(i))
 
                 output = dict(req.json())
                 spot_amt = output['data']['amount']
 
                 outfile.write(str(time_point) + "\t" + spot_amt + "\n")
-            outfile.close()
 
-        print("Prices saved")
+            # write the remaining days that do not
+            # need to be updated
+            for line in prices[:1094-days_delta]:
+                outfile.write(line)
+
+            outfile.close() 
+            print("Prices saved")
+            return days_delta
+        else:
+            return 0
+
+
+    '''
+    Check last update condition
+    '''
+    def is_update(self):
+        curr_date = dt.datetime.today().date()
+        with open('prices.txt', 'r') as infile:
+            last_update = infile.readline()
+        if (str(curr_date) + "\n") != last_update:
+            return True
+        else:
+            return False
+
+
+    '''
+    Get num days from last update
+    '''
+    def get_diff_days(self):
+        curr_date = dt.datetime.today().date()
+        with open('prices.txt', 'r') as infile:
+            last_update_date = infile.readline().strip("\n")
+            last_update = dt.datetime.strptime(last_update_date, "%Y-%m-%d")
+            days_delta = (curr_date - last_update.date()).days
+        return days_delta
 
 
     '''
     Parse price data from txt file
     '''
-    def parse_prices_file(self):
+    def parse_prices_file(self, num_days):
         infile = open('prices.txt', 'r')
 
         lst_prices = []
@@ -189,13 +226,14 @@ class Data():
         output = dict(req['data']['rates'])
 
         exchange_list = []
+
         for k,v in output.iteritems():
-            if (key == 'BTC'):
+            if (k == 'BTC'):
                 exchange_list.append("%.6f" % (float(convert)*float(value)))
                 exchange_list.append(key)
-            if ((key == 'USD') or (key == 'EUR') or (key == 'JPY') or (key == 'GBP') or (key == 'CHF')):
+            if ((k == 'USD') or (k == 'EUR') or (k == 'JPY') or (k == 'GBP') or (k == 'CHF')):
                 exchange_list.append("%.2f" % (float(convert)*float(value)))
-                exchange_list.append(key)
+                exchange_list.append(k)
 
         return exchange_list
 
