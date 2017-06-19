@@ -90,6 +90,11 @@ class Main_Page(tk.Frame):
         # instantiate primary object
         data_1 = Data()
 
+        # display last spot price
+        price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
+        price_lbl.place(x=(WIN_LENGTH // 2 - 150), y=65)
+        _thread.start_new_thread(self.draw_spot_price_main, (data_1, 30))
+
         # retrieve daily btc prices for
         # past 3 years
         days_delta = data_1.get_3yr_daily_price()
@@ -99,6 +104,9 @@ class Main_Page(tk.Frame):
         # for past 3 years
         f = matplotlib.figure.Figure(figsize=(8,4), dpi=100, facecolor=BG_COLOR)
         a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
+
+        plot_title = "BTC Prices"
+        a.set_title(plot_title, color=FG_COLOR)
 
         a.spines['top'].set_color(FG_COLOR)
         a.spines['bottom'].set_color(FG_COLOR)
@@ -122,6 +130,14 @@ class Main_Page(tk.Frame):
         canvas._tkcanvas.place(x=(WIN_LENGTH // 10), y=80)
         '''
 
+    def draw_spot_price_main(self, data, delay):
+        while 1:
+            spot_price_lst = data.get_spot_price()
+            spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                      text=spot_price_lst[0] + \
+                                      " " + spot_price_lst[1])
+            spot_price_lbl.place(x=(WIN_LENGTH // 2 + 50), y = 65)
+            time.sleep(delay)
 
 
 
@@ -141,12 +157,12 @@ class Account_Page(tk.Frame):
         main_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="Back to Main Page",
                              command=lambda: controller.show_frame(Main_Page))
-        main_btn.place(x=0, y=0)
+        main_btn.place(x=325, y=500)
 
         data_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="BTC Data Information",
                              command=lambda: controller.show_frame(Data_Page))
-        data_btn.place(x=300, y=0)
+        data_btn.place(x=65, y=500)
 
         # instantiate primary objects
         acct_1 = Account()
@@ -170,30 +186,34 @@ class Account_Page(tk.Frame):
                                text=acct_1.get_acct_id())
         acct_id_lbl.place(x=(WIN_LENGTH / 100 + 225), y=70)
 
-        # draw account balance label
+        # draw account balance header 
         acct_bal_hdr = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                 text="CURRENT ACCOUNT BALANCE:",
                                 font=HEADER_FONT)
         acct_bal_hdr.place(x=(WIN_LENGTH / 100), y=90)
 
-        # draw current price header
+        # draw current spot price header
         price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="CURRENT BTC PRICE: ",
                              font=HEADER_FONT)
         price_lbl.place(x=(WIN_LENGTH - 250), y=50)
 
+        # draw account transactions header
+        trans_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                             text="RECENT TRANSACTIONS", font=HEADER_FONT)
+        trans_lbl.place(x=(WIN_LENGTH / 2 - 75), y=145)
+
         # 1st thread (draw account balance)
         _thread.start_new_thread(self.draw_balance, (acct_1, 60))
 
         # 2nd thread (draw account transactions)
-        trans_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="RECENT TRANSACTIONS", font=HEADER_FONT)
-        trans_lbl.place(x=(WIN_LENGTH / 2 - 75), y=145)
         _thread.start_new_thread(self.draw_transactions, (acct_1, 60))
 
         # 3rd thread (draw current spot price)
-
         _thread.start_new_thread(self.draw_spot_price, (data_1, 30))
+
+    # initiate threads function
+    #def create_threads(self, )
 
     # draw the current account balance to the tkinter window
     def draw_balance(self, account, delay):
@@ -218,21 +238,23 @@ class Account_Page(tk.Frame):
         while 1:
             trans_lst = account.get_acct_transactions()
             lbl = {}
+            count = 0
             spacing = 0
 
-            for i in range(5):
-                lbl[i] = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                        text="{0:30s}{1:10s}{2:13s}{3:6s}{4:4s}{5:8s}{6:12s}{7}".format(
-                                        trans_lst[i]['created_at'],
-                                        trans_lst[i]['type'].upper(),
-                                        str(trans_lst[i]['amount']['amount']),
-                                        trans_lst[i]['amount']['currency'],
-                                        "~",
-                                        trans_lst[i]['native_amount']['amount'],
-                                        trans_lst[i]['native_amount']['currency'],
-                                        trans_lst[i]['status'].upper()))
-                lbl[i].place(x=(WIN_WIDTH // 2.5), y=(170 + spacing))
+            for t in trans_lst:
+                lbl[count] = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                      text="{0:30s}{1:10s}{2:13s}{3:6s}{4:4s}{5:8s}{6:12s}{7}".format(
+                                      trans_lst[count]['created_at'],
+                                      trans_lst[count]['type'].upper(),
+                                      str(trans_lst[count]['amount']['amount']),
+                                      trans_lst[count]['amount']['currency'],
+                                      "~",
+                                      trans_lst[count]['native_amount']['amount'],
+                                      trans_lst[count]['native_amount']['currency'],
+                                      trans_lst[count]['status'].upper()))
+                lbl[count].place(x=(WIN_WIDTH // 2.5), y=(170 + spacing))
                 spacing += 30
+                count += 1
 
             time.sleep(delay)
 
