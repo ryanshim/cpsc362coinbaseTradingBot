@@ -33,12 +33,31 @@ class Data():
         return [self.spot_price_amt, self.spot_price_currency]
 
     '''
+    get prices helper function
+    '''
+    def get_prices_helper(self, lst_times):
+        prices = []
+        auth = CoinbaseWalletAuth()
+
+        for time in lst_times:
+            try:
+                req = requests.get(self.api_url + 'prices/BTC-USD/spot',
+                                   'date=' + str(time), auth=auth)
+                output = dict(req.json())
+                spot_amt = output['data']['amount']
+                spot_currency = output['data']['currency']
+                prices.append([spot_amt, spot_currency])
+            except RuntimeError:
+                print("Price data for: " + str(time) + " failed to retrieve\n")
+
+        return prices
+
+    '''
     get historical prices of beg each month
     from the last 6 months
     '''
     def get_6_month_prices(self):
         time_points = []
-        prices = []
         date = dt.date.today()
 
         # create timestamps
@@ -61,16 +80,7 @@ class Data():
 
             time_points.append(date.replace(day=d, month=m, year=y))
 
-        # initiate API call
-        auth = CoinbaseWalletAuth()
-
-        for j in time_points:
-            req = requests.get(self.api_url + 'prices/BTC-USD/spot',
-                               'date=' + str(time_points[j]), auth=auth)
-            output = dict(req.json())
-            spot_amt = output['data']['amount']
-            spot_currency = output['data']['currency']
-            prices.append([spot_amt, spot_currency])
+        prices = self.get_prices_helper(time_points)
 
         return prices
 
@@ -80,19 +90,12 @@ class Data():
     '''
     def get_4_week_prices(self):
         time_points = []
-        prices = []
 
         # get time points of beg of each week
         for i in range(1,5):
             time_points.append(dt.date.today() - dt.timedelta(weeks=i))
 
-            # initiate API call
-            req = requests.get(self.api_url + 'prices/BTC-USD/spot',
-                               'date=' + time_points[j], auth=auth)
-            output = dict(req.json())
-            spot_amt = output['data']['amount']
-            spot_currency = output['data']['currency']
-            prices.append[[spot_amt, spot_currency]]
+        prices = self.get_prices_helper(time_points)
 
         return prices
 
@@ -102,22 +105,12 @@ class Data():
     '''
     def get_7_day_prices(self):
         time_points = []
-        prices = []
 
         # get time points
         for i in range(1,8):
             time_points.append(dt.date.today() - dt.timedelta(days=i))
 
-        # initiate API call
-        auth = CoinbaseWalletAuth()
-
-        for j in time_points:
-            req = requests.get(self.api_url + 'prices/BTC-USD/spot',
-                               'date=' + time_points[j], auth=auth)
-            output = dict(req.json())
-            spot_amt = output['data']['amount']
-            spot_currency = output['data']['currency']
-            prices.append[[spot_amt, spot_currency]]
+        prices = self.get_prices_helper(time_points)
 
         return prices
 
