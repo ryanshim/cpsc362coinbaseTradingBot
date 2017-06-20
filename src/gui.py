@@ -87,18 +87,22 @@ class Main_Page(tk.Frame):
                               text="EXIT", command=quit)
         exit_btn.place(x=845, y=500)
 
-        # instantiate primary object
-        data_1 = Data()
-
         # display last spot price
         price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
         price_lbl.place(x=(WIN_LENGTH // 2 - 150), y=65)
-        _thread.start_new_thread(self.draw_spot_price_main, (data_1, 30))
+
+        # work around for the runtime error
+        # probably not a good idea
+        try:
+            _thread.start_new_thread(self.draw_spot_price_main, (data, 60))
+        except RuntimeError:
+            _thread.start_new_thread(self.draw_spot_price_main(data, 60))
 
         # retrieve daily btc prices for
         # past 3 years
-        days_delta = data_1.get_3yr_daily_price()
-        lst_prices, lst_dates = data_1.parse_prices_file(days_delta)
+        days_delta = data.get_3yr_daily_price()
+
+        lst_prices, lst_dates = data.parse_prices_file(days_delta)
 
         # insert an overview of prices of btc
         # for past 3 years
@@ -121,7 +125,7 @@ class Main_Page(tk.Frame):
         
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
-        canvas.get_tk_widget().place(x=(WIN_LENGTH // 10), y=80)
+        canvas.get_tk_widget().place(x=100, y=80)
 
         # matplotlib toolbar
         '''
@@ -140,9 +144,6 @@ class Main_Page(tk.Frame):
             time.sleep(delay)
 
 
-
-
-
 '''
 Account information page
 '''
@@ -152,7 +153,7 @@ class Account_Page(tk.Frame):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
         label = tk.Label(self, text="Coinbase Account Page",
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        label.place(x=(WIN_LENGTH/2 - 100), y=30)
+        label.place(x=420, y=30)
 
         main_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="Back to Main Page",
@@ -164,56 +165,56 @@ class Account_Page(tk.Frame):
                              command=lambda: controller.show_frame(Data_Page))
         data_btn.place(x=65, y=500)
 
-        # instantiate primary objects
-        acct_1 = Account()
-        data_1 = Data()
-
         # Draw data
         # draw account name label
         acct_name_hdr = tk.Label(self, text="ACCOUNT NAME:\t\t",
                                  font=HEADER_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        acct_name_hdr.place(x=(WIN_LENGTH / 100), y=50)
-        acct_name_lbl = tk.Label(self, text=acct_1.get_acct_name(),
+        acct_name_hdr.place(x=10, y=70)
+        acct_name_lbl = tk.Label(self, text=acct.get_acct_name(),
                                  bg=BG_COLOR, fg=FG_COLOR)
-        acct_name_lbl.place(x=(WIN_LENGTH / 100 + 225), y=50)
+        acct_name_lbl.place(x=235, y=70)
 
         # draw account id label
         acct_id_hdr_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                    text="ACCOUNT ID:\t\t",
                                    font=HEADER_FONT)
-        acct_id_hdr_lbl.place(x=(WIN_LENGTH / 100), y=70)
+        acct_id_hdr_lbl.place(x=10, y=90)
         acct_id_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                               text=acct_1.get_acct_id())
-        acct_id_lbl.place(x=(WIN_LENGTH / 100 + 225), y=70)
+                               text=acct.get_acct_id())
+        acct_id_lbl.place(x=235, y=90)
 
         # draw account balance header 
         acct_bal_hdr = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                 text="CURRENT ACCOUNT BALANCE:",
                                 font=HEADER_FONT)
-        acct_bal_hdr.place(x=(WIN_LENGTH / 100), y=90)
+        acct_bal_hdr.place(x=10, y=110)
 
         # draw current spot price header
         price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="CURRENT BTC PRICE: ",
                              font=HEADER_FONT)
-        price_lbl.place(x=(WIN_LENGTH - 250), y=50)
+        price_lbl.place(x=750, y=70)
 
-        # draw account transactions header
+        # draw account transactions header and table header
         trans_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                              text="RECENT TRANSACTIONS", font=HEADER_FONT)
-        trans_lbl.place(x=(WIN_LENGTH / 2 - 75), y=145)
+        trans_lbl.place(x=425, y=160)
+        trans_tbl_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text=("{0:28s}{1:35s}{2:35s}{3}").format(
+                                 "TRANSACTION TIME",
+                                 "TYPE",
+                                 "AMOUNT",
+                                 "STATUS"))
+        trans_tbl_lbl.place(x=215, y=195)
 
-        # 1st thread (draw account balance)
-        _thread.start_new_thread(self.draw_balance, (acct_1, 60))
 
-        # 2nd thread (draw account transactions)
-        _thread.start_new_thread(self.draw_transactions, (acct_1, 60))
-
-        # 3rd thread (draw current spot price)
-        _thread.start_new_thread(self.draw_spot_price, (data_1, 30))
+        self.create_threads()
 
     # initiate threads function
-    #def create_threads(self, )
+    def create_threads(self):
+        _thread.start_new_thread(self.draw_balance, (acct, 60))
+        _thread.start_new_thread(self.draw_transactions, (acct, 60))
+        _thread.start_new_thread(self.draw_spot_price, (data, 30))
 
     # draw the current account balance to the tkinter window
     def draw_balance(self, account, delay):
@@ -221,7 +222,7 @@ class Account_Page(tk.Frame):
             bal, bal_curr = account.get_acct_balance()
             bal_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                text=bal + " " + bal_curr) 
-            bal_lbl.place(x=(WIN_LENGTH / 100 + 225), y=90)
+            bal_lbl.place(x=235, y=110)
             time.sleep(delay)
 
     def draw_spot_price(self, data, delay):
@@ -230,7 +231,7 @@ class Account_Page(tk.Frame):
             spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                       text=spot_price_lst[0] + \
                                       " " + spot_price_lst[1])
-            spot_price_lbl.place(x=(WIN_LENGTH - 100), y = 50)
+            spot_price_lbl.place(x=900, y = 70)
             time.sleep(delay)
 
     # draw the latest account transactions
@@ -243,7 +244,8 @@ class Account_Page(tk.Frame):
 
             for t in trans_lst:
                 lbl[count] = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                      text="{0:30s}{1:10s}{2:13s}{3:6s}{4:4s}{5:8s}{6:12s}{7}".format(
+                                      text=("{0:30s}{1:10s}{2:13s}{3:6s}" + \
+                                            "{4:4s}{5:8s}{6:12s}{7}").format(
                                       trans_lst[count]['created_at'],
                                       trans_lst[count]['type'].upper(),
                                       str(trans_lst[count]['amount']['amount']),
@@ -252,7 +254,7 @@ class Account_Page(tk.Frame):
                                       trans_lst[count]['native_amount']['amount'],
                                       trans_lst[count]['native_amount']['currency'],
                                       trans_lst[count]['status'].upper()))
-                lbl[count].place(x=(WIN_WIDTH // 2.5), y=(170 + spacing))
+                lbl[count].place(x=200, y=(215 + spacing))
                 spacing += 30
                 count += 1
 
@@ -262,16 +264,80 @@ class Account_Page(tk.Frame):
 class Data_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
-        label = tk.Label(self, text="BTC Data Page", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
 
-        button1 = ttk.Button(self, text="Coinbase Account Information",
-                            command=lambda: controller.show_frame(Account_Page))
-        button1.pack()
+        # retrieve daily btc prices for
+        # past 3 years
+        days_delta = data.get_3yr_daily_price()
 
-        button2 = ttk.Button(self, text="Back to Main Page",
-                            command=lambda: controller.show_frame(Main_Page))
-        button2.pack()
+        lst_prices, lst_dates = data.parse_prices_file(days_delta)
+
+        self.plot_chart(lst_prices, lst_dates)
+
+        # navigation buttons 
+        main_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                             text="Back to Main Page",
+                             command=lambda: controller.show_frame(Main_Page))
+        main_btn.place(x=65, y=500)
+
+        acct_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                             text="Coinbase Account Information",
+                             command=lambda: controller.show_frame(Account_Page))
+        acct_btn.place(x=325, y=500)
+
+        analysis_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="BTC Analysis",
+                                 command=lambda: controller.show_frame(Account_Page))
+        analysis_btn.place(x=645, y=500)
+
+        exit_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                              text="EXIT",
+                              command=quit)
+        exit_btn.place(x=845, y=500)
+
+        # plot controller buttons
+        # 7 day
+        # 2 week
+        # 1 month
+        # 3 month
+        # 6 month
+        # 1 year
+        # 3 years
+        three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="3 Yr",
+                                 command=self.plot_chart(lst_prices, lst_dates))
+        three_yr_btn.place(x=65, y=400)
+
+        one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="1 Yr",
+                                 command=self.plot_chart(lst_prices[0:365],
+                                                         lst_dates[0:365]))
+        one_yr_btn.place(x=325, y=400)
+
+    def plot_chart(self, lst_prices, lst_dates):
+        # insert an overview of prices of btc
+        # for past 3 years
+        f = matplotlib.figure.Figure(figsize=(6,3), dpi=100, facecolor=BG_COLOR)
+        a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
+
+        plot_title = "BTC Prices"
+        a.set_title(plot_title, color=FG_COLOR)
+
+        a.spines['top'].set_color(FG_COLOR)
+        a.spines['bottom'].set_color(FG_COLOR)
+        a.spines['left'].set_color(FG_COLOR)
+        a.spines['right'].set_color(FG_COLOR)
+        a.tick_params(axis='x', colors=FG_COLOR)
+        a.tick_params(axis='y', colors=FG_COLOR)
+        a.yaxis.label.set_color(FG_COLOR)
+        a.xaxis.label.set_color(FG_COLOR)
+
+        a.plot(lst_dates, lst_prices)
+        
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        canvas.get_tk_widget().place(x=200, y=20)
+
+
 
 
 class Analysis_Page(tk.Frame):
@@ -293,11 +359,15 @@ class Analysis_Page(tk.Frame):
         button3.pack()
 
 
+if __name__ == '__main__':
+    # instantiate core class objects
+    data = Data()
+    acct = Account()
+
+    app = Gui()
+    app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
+    app.mainloop()
 
 
-# Run the script
-app = Gui()
-app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
-app.mainloop()
 
 
