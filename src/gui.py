@@ -28,6 +28,9 @@ WIN_WIDTH = 600
 BG_COLOR = "#FFFFFF"
 FG_COLOR = "#303642"
 
+
+spot_price_var = []
+
 class Gui(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -39,6 +42,21 @@ class Gui(tk.Tk):
                                                     # weight is priority (just use 1)
         container.grid_columnconfigure(0, weight=1)
 
+        # MENU BAR CONFIG
+        menu_bar = tk.Menu(container)
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        file_menu.add_command(label="CB Account", command=lambda: self.show_frame(Account_Page))
+        file_menu.add_separator()
+        file_menu.add_command(label="BTC Data", command=lambda: self.show_frame(Data_Page))
+        file_menu.add_separator()
+        file_menu.add_command(label="BTC Analysis", command=lambda: self.show_frame(Analysis_Page))
+        file_menu.add_separator()
+        file_menu.add_command(label="Main Page", command=lambda: self.show_frame(Main_Page))
+        file_menu.add_command(label="Exit", command=quit)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+
+        tk.Tk.config(self, menu=menu_bar)
+
         self.frames = {}
 
         for fm in (Main_Page, Account_Page, Data_Page, Analysis_Page):
@@ -46,12 +64,13 @@ class Gui(tk.Tk):
             self.frames[fm] = frame
             frame.grid(row=0, column=0, sticky='nsew')  # sticky (stretch win items north
                                                         # south east west)
+
         self.show_frame(Main_Page)
+
 
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
-
 
 
 
@@ -67,42 +86,16 @@ class Main_Page(tk.Frame):
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
         label.place(x=(WIN_LENGTH/2 - 100), y=30)
 
-        # create navigation buttons
-        acct_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                            text="CB Account Information",
-                            command=lambda: controller.show_frame(Account_Page))
-        acct_btn.place(x=65, y=500)
-
-        data_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                              text="BTC Data Information",
-                              command=lambda: controller.show_frame(Data_Page))
-        data_btn.place(x=325, y=500)
-
-        analysis_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                  text="BTC Buy/Sell Analysis",
-                                  command=lambda: controller.show_frame(Analysis_Page))
-        analysis_btn.place(x=585, y=500)
-
-        exit_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                              text="EXIT", command=quit)
-        exit_btn.place(x=845, y=500)
-
         # display last spot price
         price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
-        price_lbl.place(x=(WIN_LENGTH // 2 - 150), y=65)
-
-        # work around for the runtime error
-        # probably not a good idea
-        try:
-            _thread.start_new_thread(self.draw_spot_price_main, (data, 60))
-        except RuntimeError:
-            _thread.start_new_thread(self.draw_spot_price_main(data, 60))
+        price_lbl.place(x=410, y=65)
 
         # retrieve daily btc prices for
         # past 3 years
         days_delta = data.get_3yr_daily_price()
-
         lst_prices, lst_dates = data.parse_prices_file(days_delta)
+
+        self.start_threads_main()
 
         # insert an overview of prices of btc
         # for past 3 years
@@ -127,21 +120,24 @@ class Main_Page(tk.Frame):
         canvas.show()
         canvas.get_tk_widget().place(x=100, y=80)
 
-        # matplotlib toolbar
         '''
+        # matplotlib toolbar
         toolbar = NavigationToolbar2TkAgg(canvas, self)
         toolbar.update()
         canvas._tkcanvas.place(x=(WIN_LENGTH // 10), y=80)
         '''
 
-    def draw_spot_price_main(self, data, delay):
+    def start_threads_main(self):
+        _thread.start_new_thread(self.retrieve_spot_price, (data, 30))
+
+    def retrieve_spot_price(self, cls_data, delay):
         while 1:
-            spot_price_lst = data.get_spot_price()
+            spot_price = cls_data.get_spot_price()
             spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                      text=spot_price_lst[0] + \
-                                      " " + spot_price_lst[1])
-            spot_price_lbl.place(x=(WIN_LENGTH // 2 + 50), y = 65)
+                                      text=spot_price[0] + " " + spot_price[1])
+            spot_price_lbl.place(x=510, y=65)
             time.sleep(delay)
+
 
 
 '''
@@ -155,15 +151,6 @@ class Account_Page(tk.Frame):
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
         label.place(x=420, y=30)
 
-        main_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="Back to Main Page",
-                             command=lambda: controller.show_frame(Main_Page))
-        main_btn.place(x=325, y=500)
-
-        data_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="BTC Data Information",
-                             command=lambda: controller.show_frame(Data_Page))
-        data_btn.place(x=65, y=500)
 
         # Draw data
         # draw account name label
@@ -273,45 +260,48 @@ class Data_Page(tk.Frame):
 
         self.plot_chart(lst_prices, lst_dates)
 
-        # navigation buttons 
-        main_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="Back to Main Page",
-                             command=lambda: controller.show_frame(Main_Page))
-        main_btn.place(x=65, y=500)
-
-        acct_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="Coinbase Account Information",
-                             command=lambda: controller.show_frame(Account_Page))
-        acct_btn.place(x=325, y=500)
-
-        analysis_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="BTC Analysis",
-                                 command=lambda: controller.show_frame(Account_Page))
-        analysis_btn.place(x=645, y=500)
-
-        exit_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                              text="EXIT",
-                              command=quit)
-        exit_btn.place(x=845, y=500)
-
         # plot controller buttons
-        # 7 day
-        # 2 week
-        # 1 month
-        # 3 month
-        # 6 month
-        # 1 year
-        # 3 years
         three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="3 Yr",
-                                 command=self.plot_chart(lst_prices, lst_dates))
-        three_yr_btn.place(x=65, y=400)
+                                 text="3 Year",
+                                 command=lambda: self.plot_chart(lst_prices, lst_dates))
+        three_yr_btn.place(x=25, y=400)
 
         one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="1 Yr",
-                                 command=self.plot_chart(lst_prices[0:365],
-                                                         lst_dates[0:365]))
-        one_yr_btn.place(x=325, y=400)
+                                 text="1 Year",
+                                 command=lambda: self.plot_chart(lst_prices[0:365],
+                                                                 lst_dates[0:365]))
+        one_yr_btn.place(x=100, y=400)
+
+        six_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="6 Month",
+                                 command=lambda: self.plot_chart(lst_prices[0:183],
+                                                                 lst_dates[0:183]))
+        six_mon_btn.place(x=175, y=400)
+
+        three_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="3 Month",
+                                 command=lambda: self.plot_chart(lst_prices[0:92],
+                                                                 lst_dates[0:92]))
+        three_mon_btn.place(x=260, y=400)
+
+        one_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="1 Month",
+                                 command=lambda: self.plot_chart(lst_prices[0:30],
+                                                                 lst_dates[0:30]))
+        one_mon_btn.place(x=345, y=400)
+
+        three_wk_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="3 Week",
+                                 command=lambda: self.plot_chart(lst_prices[0:21],
+                                                                 lst_dates[0:21]))
+        three_wk_btn.place(x=433, y=400)
+
+        seven_day_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="7 Day",
+                                 command=lambda: self.plot_chart(lst_prices[0:7],
+                                                                 lst_dates[0:7]))
+        seven_day_btn.place(x=515, y=400)
+
 
     def plot_chart(self, lst_prices, lst_dates):
         # insert an overview of prices of btc
@@ -326,7 +316,7 @@ class Data_Page(tk.Frame):
         a.spines['bottom'].set_color(FG_COLOR)
         a.spines['left'].set_color(FG_COLOR)
         a.spines['right'].set_color(FG_COLOR)
-        a.tick_params(axis='x', colors=FG_COLOR)
+        a.tick_params(axis='x', colors=FG_COLOR, which='major')
         a.tick_params(axis='y', colors=FG_COLOR)
         a.yaxis.label.set_color(FG_COLOR)
         a.xaxis.label.set_color(FG_COLOR)
@@ -335,7 +325,7 @@ class Data_Page(tk.Frame):
         
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
-        canvas.get_tk_widget().place(x=200, y=20)
+        canvas.get_tk_widget().place(x=20, y=20)
 
 
 
@@ -346,25 +336,15 @@ class Analysis_Page(tk.Frame):
         label = tk.Label(self, text="BTC Analysis Page", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button1 = ttk.Button(self, text="Coinbase Account Information",
-                            command=lambda: controller.show_frame(Account_Page))
-        button1.pack()
 
-        button2 = ttk.Button(self, text="Back to Main Page",
-                            command=lambda: controller.show_frame(Data_Page))
-        button2.pack()
-
-        button3 = ttk.Button(self, text="Back to Main Page",
-                            command=lambda: controller.show_frame(Main_Page))
-        button3.pack()
 
 
 if __name__ == '__main__':
     # instantiate core class objects
     data = Data()
     acct = Account()
-
     app = Gui()
+
     app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
     app.mainloop()
 
