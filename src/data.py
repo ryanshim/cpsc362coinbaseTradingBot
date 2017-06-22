@@ -221,22 +221,13 @@ class Data():
         output = dict(req['data']['rates'])
         return output
 
-        '''
-        exchange_list = []
+    '''
+    convert currency (BTC -> USD)
+    '''
+    def convert_currency(self, amount, code):
+        rates = self.get_exchange_rates()
 
-        for k,v in output.items():
-            if ((k == 'USD') or
-                (k == 'EUR') or
-                (k == 'JPY') or
-                (k == 'GBP') or
-                (k == 'CHF')):
-                exchange_list.append("%.2f" % (float(convert_amt)*float(v)))
-                exchange_list.append(k)
-
-            elif (k == 'BTC'):
-                exchange_list.append("%.6f" % (float(convert_amt)*float(v)))
-                exchange_list.append(k)
-
-        return exchange_list
-        '''
+        for k,v in rates.items():
+            if k == code:
+                return float(amount) * float(v)
 
