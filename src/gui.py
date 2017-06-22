@@ -4,6 +4,7 @@ Gui class created with Tkinter
 # thread related imports
 import _thread
 import time
+import datetime as dt
 
 # gui module imports
 import tkinter as tk
@@ -12,6 +13,7 @@ from tkinter import ttk
 # matplot lib imports
 import matplotlib
 matplotlib.use("TkAgg")
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg 
 
@@ -27,7 +29,6 @@ WIN_LENGTH = 1000
 WIN_WIDTH = 600
 BG_COLOR = "#FFFFFF"
 FG_COLOR = "#303642"
-
 
 spot_price_var = []
 
@@ -45,14 +46,23 @@ class Gui(tk.Tk):
         # MENU BAR CONFIG
         menu_bar = tk.Menu(container)
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="CB Account", command=lambda: self.show_frame(Account_Page))
+        file_menu.add_command(label="CB Account",
+                              command=lambda: self.show_frame(Account_Page))
         file_menu.add_separator()
-        file_menu.add_command(label="BTC Data", command=lambda: self.show_frame(Data_Page))
+
+        file_menu.add_command(label="BTC Data",
+                              command=lambda: self.show_frame(Data_Page))
         file_menu.add_separator()
-        file_menu.add_command(label="BTC Analysis", command=lambda: self.show_frame(Analysis_Page))
+
+        file_menu.add_command(label="BTC Analysis",
+                              command=lambda: self.show_frame(Analysis_Page))
         file_menu.add_separator()
-        file_menu.add_command(label="Main Page", command=lambda: self.show_frame(Main_Page))
+
+        file_menu.add_command(label="Main Page",
+                              command=lambda: self.show_frame(Main_Page))
+
         file_menu.add_command(label="Exit", command=quit)
+
         menu_bar.add_cascade(label="File", menu=file_menu)
 
         tk.Tk.config(self, menu=menu_bar)
@@ -84,22 +94,17 @@ class Main_Page(tk.Frame):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
         label = tk.Label(self, text="Coinbase Trading Application",
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        label.place(x=(WIN_LENGTH/2 - 100), y=30)
-
-        # display last spot price
-        price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
-        price_lbl.place(x=410, y=65)
+        label.place(x=400, y=30)
 
         # retrieve daily btc prices for
         # past 3 years
         days_delta = data.get_3yr_daily_price()
         lst_prices, lst_dates = data.parse_prices_file(days_delta)
 
-        self.start_threads_main()
 
         # insert an overview of prices of btc
         # for past 3 years
-        f = matplotlib.figure.Figure(figsize=(8,4), dpi=100, facecolor=BG_COLOR)
+        f = matplotlib.figure.Figure(figsize=(8,5), dpi=100, facecolor=BG_COLOR)
         a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
 
         plot_title = "BTC Prices"
@@ -115,10 +120,12 @@ class Main_Page(tk.Frame):
         a.xaxis.label.set_color(FG_COLOR)
 
         a.plot(lst_dates, lst_prices)
+        labels = a.get_xticklabels()
+        plt.setp(labels, rotation=30)
         
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
-        canvas.get_tk_widget().place(x=100, y=80)
+        canvas.get_tk_widget().place(x=100, y=60)
 
         '''
         # matplotlib toolbar
@@ -126,6 +133,11 @@ class Main_Page(tk.Frame):
         toolbar.update()
         canvas._tkcanvas.place(x=(WIN_LENGTH // 10), y=80)
         '''
+        # display last spot price
+        price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
+        price_lbl.place(x=410, y=65)
+        self.start_threads_main()
+
 
     def start_threads_main(self):
         _thread.start_new_thread(self.retrieve_spot_price, (data, 30))
@@ -248,6 +260,9 @@ class Account_Page(tk.Frame):
             time.sleep(delay)
 
 
+
+
+
 class Data_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
@@ -255,7 +270,6 @@ class Data_Page(tk.Frame):
         # retrieve daily btc prices for
         # past 3 years
         days_delta = data.get_3yr_daily_price()
-
         lst_prices, lst_dates = data.parse_prices_file(days_delta)
 
         self.plot_chart(lst_prices, lst_dates)
@@ -264,68 +278,128 @@ class Data_Page(tk.Frame):
         three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
                                  text="3 Year",
                                  command=lambda: self.plot_chart(lst_prices, lst_dates))
-        three_yr_btn.place(x=25, y=400)
+        three_yr_btn.place(x=25, y=510)
 
         one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="1 Year",
-                                 command=lambda: self.plot_chart(lst_prices[0:365],
+                               text="1 Year",
+                               command=lambda: self.plot_chart(lst_prices[0:365],
                                                                  lst_dates[0:365]))
-        one_yr_btn.place(x=100, y=400)
+        one_yr_btn.place(x=100, y=510)
 
         six_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="6 Month",
-                                 command=lambda: self.plot_chart(lst_prices[0:183],
+                                text="6 Month",
+                                command=lambda: self.plot_chart(lst_prices[0:183],
                                                                  lst_dates[0:183]))
-        six_mon_btn.place(x=175, y=400)
+        six_mon_btn.place(x=175, y=510)
 
         three_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="3 Month",
-                                 command=lambda: self.plot_chart(lst_prices[0:92],
+                                  text="3 Month",
+                                  command=lambda: self.plot_chart(lst_prices[0:92],
                                                                  lst_dates[0:92]))
-        three_mon_btn.place(x=260, y=400)
+        three_mon_btn.place(x=260, y=510)
 
         one_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="1 Month",
-                                 command=lambda: self.plot_chart(lst_prices[0:30],
+                                text="1 Month",
+                                command=lambda: self.plot_chart(lst_prices[0:30],
                                                                  lst_dates[0:30]))
-        one_mon_btn.place(x=345, y=400)
+        one_mon_btn.place(x=345, y=510)
 
         three_wk_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
                                  text="3 Week",
                                  command=lambda: self.plot_chart(lst_prices[0:21],
                                                                  lst_dates[0:21]))
-        three_wk_btn.place(x=433, y=400)
+        three_wk_btn.place(x=433, y=510)
 
         seven_day_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="7 Day",
-                                 command=lambda: self.plot_chart(lst_prices[0:7],
+                                  text="7 Day",
+                                  command=lambda: self.plot_chart(lst_prices[0:7],
                                                                  lst_dates[0:7]))
-        seven_day_btn.place(x=515, y=400)
+        seven_day_btn.place(x=515, y=510)
+
+        # plot misc. conversion data
+        xchangert_hdr = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                 text="Exchange Rate Conversion")
+        xchangert_hdr.place(x=700, y=30)
+
+        btc_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                           text="BTC -> ")
+        btc_lbl.place(x=690, y=60)
+
+        converted_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                     text="Converted Amount:")
+        converted_amt_lbl.place(x=600, y=110)
+
+        # create text entry
+        entry = tk.Entry(self, width=10)
+        entry.place(x=600, y=60)
+
+        rates = data.get_exchange_rates()
+        curr_codes = []
+        for k,v in rates.items():
+            curr_codes.append(k)
+        curr_codes.sort()
+
+        # create currency code combo box
+        curr_combo_box = ttk.Combobox(self, state='readonly')
+        curr_combo_box['values'] = curr_codes
+        curr_combo_box.place(x=750, y=60)
+
+        # call the conversion function on btn press
+        convert_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
+                                text="Convert",
+                                command=lambda: self.convert_currency(entry,
+                                                                      curr_combo_box))
+        convert_btn.place(x=800, y=80)
+
+
+    '''
+    Data_Page functions
+    '''
+    def convert_currency(self, entry_obj, combo_box_obj):
+        rates = data.get_exchange_rates()
+
+        # retrieve user input data
+        amount = entry_obj.get()
+        code = combo_box_obj.get()
+
+        # this currently creates new labels
+        # each time the convert button is pressed
+        # need to find a widget that replaces
+        for k,v in rates.items():
+            if k == code:
+                convert_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                           text=("%.2f" % (float(amount)*float(v))))
+                convert_amt_lbl.place(x=730, y=110)
+                return ("%.2f" % (float(amount)*float(v)))
 
 
     def plot_chart(self, lst_prices, lst_dates):
         # insert an overview of prices of btc
         # for past 3 years
-        f = matplotlib.figure.Figure(figsize=(6,3), dpi=100, facecolor=BG_COLOR)
+        f = matplotlib.figure.Figure(figsize=(6,5), dpi=100, facecolor=BG_COLOR)
         a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
 
         plot_title = "BTC Prices"
         a.set_title(plot_title, color=FG_COLOR)
 
+        # configure the plot characteristics 
         a.spines['top'].set_color(FG_COLOR)
         a.spines['bottom'].set_color(FG_COLOR)
         a.spines['left'].set_color(FG_COLOR)
         a.spines['right'].set_color(FG_COLOR)
-        a.tick_params(axis='x', colors=FG_COLOR, which='major')
-        a.tick_params(axis='y', colors=FG_COLOR)
+        a.tick_params(axis='x', colors=FG_COLOR, labelsize='small', gridOn=True)
+        a.tick_params(axis='y', colors=FG_COLOR, labelsize='small', gridOn=True)
         a.yaxis.label.set_color(FG_COLOR)
         a.xaxis.label.set_color(FG_COLOR)
 
-        a.plot(lst_dates, lst_prices)
+        a.plot(lst_dates, lst_prices) # plot the data
         
+        labels = a.get_xticklabels()
+        plt.setp(labels, rotation=30) # rotate labels by 30 deg
+
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
-        canvas.get_tk_widget().place(x=20, y=20)
+        canvas.get_tk_widget().place(x=0, y=0)
 
 
 
