@@ -101,7 +101,6 @@ class Main_Page(tk.Frame):
         days_delta = data.get_3yr_daily_price()
         lst_prices, lst_dates = data.parse_prices_file(days_delta)
 
-
         # insert an overview of prices of btc
         # for past 3 years
         f = matplotlib.figure.Figure(figsize=(8,5), dpi=100, facecolor=BG_COLOR)
@@ -157,59 +156,47 @@ Account information page
 '''
 class Account_Page(tk.Frame):
     def __init__(self, parent, controller):
-
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
-        label = tk.Label(self, text="Coinbase Account Page",
+        # Page title
+        pg_title = tk.Label(self, text="Coinbase Account Page",
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        label.place(x=420, y=30)
-
+        pg_title.place(x=420, y=30)
 
         # Draw data
         # draw account name label
-        acct_name_hdr = tk.Label(self, text="ACCOUNT NAME:\t\t",
-                                 font=HEADER_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        acct_name_hdr.place(x=10, y=70)
-        acct_name_lbl = tk.Label(self, text=acct.get_acct_name(),
-                                 bg=BG_COLOR, fg=FG_COLOR)
-        acct_name_lbl.place(x=235, y=70)
+        acct_name_hdr = self.create_label("ACCOUNT NAME:\t\t", 10, 70, True)
+        acct_name_lbl = self.create_label(acct.get_acct_name(), 235, 70, False)
 
         # draw account id label
-        acct_id_hdr_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                   text="ACCOUNT ID:\t\t",
-                                   font=HEADER_FONT)
-        acct_id_hdr_lbl.place(x=10, y=90)
-        acct_id_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                               text=acct.get_acct_id())
-        acct_id_lbl.place(x=235, y=90)
+        acct_id_hdr_lbl = self.create_label("ACCOUNT ID:\t\t", 10, 90, True)
+        acct_id_lbl = self.create_label(acct.get_acct_id(), 235, 90, False)
 
         # draw account balance header 
-        acct_bal_hdr = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                text="CURRENT ACCOUNT BALANCE:",
-                                font=HEADER_FONT)
-        acct_bal_hdr.place(x=10, y=110)
+        acct_bal_hdr = self.create_label("CURRENT ACCOUNT BALANCE:", 10, 110, True)
 
         # draw current spot price header
-        price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="CURRENT BTC PRICE: ",
-                             font=HEADER_FONT)
-        price_lbl.place(x=750, y=70)
+        price_lbl = self.create_label("CURRENT BTC PRICE: ", 750, 70, True)
 
         # draw account transactions header and table header
-        trans_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                             text="RECENT TRANSACTIONS", font=HEADER_FONT)
-        trans_lbl.place(x=425, y=160)
-        trans_tbl_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text=("{0:28s}{1:35s}{2:35s}{3}").format(
-                                 "TRANSACTION TIME",
-                                 "TYPE",
-                                 "AMOUNT",
-                                 "STATUS"))
-        trans_tbl_lbl.place(x=215, y=195)
+        trans_lbl = self.create_label("RECENT TRANSACTIONS", 425, 160, True)
+        trans_tbl_lbl = self.create_label(("{0:28s}{1:35s}{2:35s}{3}").format(
+                            "TRANSACTION TIME", "TYPE", "AMOUNT", "STATUS"), 215, 195)
 
-
+        # begin threads
         self.create_threads()
 
     # initiate threads function
+    def create_label(self, text_param, x_coord, y_coord, bold=False):
+        if bold:
+            label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                             text=text_param, font=HEADER_FONT)
+            label.place(x=x_coord, y=y_coord)
+        else:
+            label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR, text=text_param)
+            label.place(x=x_coord, y=y_coord)
+
+    # continuously updated information needs
+    # to be created in a thread here
     def create_threads(self):
         _thread.start_new_thread(self.draw_balance, (acct, 60))
         _thread.start_new_thread(self.draw_transactions, (acct, 60))
@@ -242,18 +229,18 @@ class Account_Page(tk.Frame):
             spacing = 0
 
             for t in trans_lst:
-                lbl[count] = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                      text=("{0:30s}{1:10s}{2:13s}{3:6s}" + \
-                                            "{4:4s}{5:8s}{6:12s}{7}").format(
-                                      trans_lst[count]['created_at'],
-                                      trans_lst[count]['type'].upper(),
-                                      str(trans_lst[count]['amount']['amount']),
-                                      trans_lst[count]['amount']['currency'],
-                                      "~",
-                                      trans_lst[count]['native_amount']['amount'],
-                                      trans_lst[count]['native_amount']['currency'],
-                                      trans_lst[count]['status'].upper()))
-                lbl[count].place(x=200, y=(215 + spacing))
+                lbl[count] = self.create_label(
+                                ("{0:30s}{1:10s}{2:13s}{3:6s}" + \
+                                "{4:4s}{5:8s}{6:12s}{7}").format(
+                                trans_lst[count]['created_at'],
+                                trans_lst[count]['type'].upper(),
+                                str(trans_lst[count]['amount']['amount']),
+                                trans_lst[count]['amount']['currency'],
+                                "~",
+                                trans_lst[count]['native_amount']['amount'],
+                                trans_lst[count]['native_amount']['currency'],
+                                trans_lst[count]['status'].upper()),
+                                200, (215 + spacing), False)
                 spacing += 30
                 count += 1
 
@@ -275,64 +262,45 @@ class Data_Page(tk.Frame):
         self.plot_chart(lst_prices, lst_dates)
 
         # plot controller buttons
-        three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="3 Year",
-                                 command=lambda: self.plot_chart(lst_prices, lst_dates))
+        three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Year",
+                command=lambda: self.plot_chart(lst_prices, lst_dates))
         three_yr_btn.place(x=25, y=510)
 
-        one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                               text="1 Year",
-                               command=lambda: self.plot_chart(lst_prices[0:365],
-                                                                 lst_dates[0:365]))
+        one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="1 Year",
+                command=lambda: self.plot_chart(lst_prices[0:365], lst_dates[0:365]))
         one_yr_btn.place(x=100, y=510)
 
-        six_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                text="6 Month",
-                                command=lambda: self.plot_chart(lst_prices[0:183],
-                                                                 lst_dates[0:183]))
+        six_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="6 Month",
+                command=lambda: self.plot_chart(lst_prices[0:183], lst_dates[0:183]))
         six_mon_btn.place(x=175, y=510)
 
-        three_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                  text="3 Month",
-                                  command=lambda: self.plot_chart(lst_prices[0:92],
-                                                                 lst_dates[0:92]))
+        three_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Month",
+                command=lambda: self.plot_chart(lst_prices[0:92],lst_dates[0:92]))
         three_mon_btn.place(x=260, y=510)
 
-        one_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                text="1 Month",
-                                command=lambda: self.plot_chart(lst_prices[0:30],
-                                                                 lst_dates[0:30]))
+        one_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="1 Month",
+                command=lambda: self.plot_chart(lst_prices[0:30], lst_dates[0:30]))
         one_mon_btn.place(x=345, y=510)
 
-        three_wk_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="3 Week",
-                                 command=lambda: self.plot_chart(lst_prices[0:21],
-                                                                 lst_dates[0:21]))
+        three_wk_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Week",
+                command=lambda: self.plot_chart(lst_prices[0:21],lst_dates[0:21]))
         three_wk_btn.place(x=433, y=510)
 
-        seven_day_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                  text="7 Day",
-                                  command=lambda: self.plot_chart(lst_prices[0:7],
-                                                                 lst_dates[0:7]))
+        seven_day_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="7 Day",
+                command=lambda: self.plot_chart(lst_prices[0:7], lst_dates[0:7]))
         seven_day_btn.place(x=515, y=510)
 
-        # plot misc. conversion data
-        xchangert_hdr = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                 text="Exchange Rate Conversion")
-        xchangert_hdr.place(x=700, y=30)
-
-        btc_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                           text="BTC -> ")
-        btc_lbl.place(x=690, y=60)
-
-        converted_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                     text="Converted Amount:")
-        converted_amt_lbl.place(x=600, y=110)
+        #plot misc. conversion data
+        xchangert_hdr = self.create_label("Exchange Rate Conversion", 700, 30)
+        btc_lbl = self.create_label("BTC -> ", 690, 60)
+        converted_lbl = self.create_label("Converted Amount:", 600, 110)
 
         # create text entry
         entry = tk.Entry(self, width=10)
         entry.place(x=600, y=60)
 
+        # get the currency codes available from cb api 
+        # might create a separate function in data class
         rates = data.get_exchange_rates()
         curr_codes = []
         for k,v in rates.items():
@@ -344,33 +312,37 @@ class Data_Page(tk.Frame):
         curr_combo_box['values'] = curr_codes
         curr_combo_box.place(x=750, y=60)
 
+        # create amount label
+        converted_amt_var = tk.StringVar()
+        converted_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                     textvariable=converted_amt_var)
+        converted_amt_lbl.place(x=750, y=110)
+
         # call the conversion function on btn press
-        convert_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR,
-                                text="Convert",
-                                command=lambda: self.convert_currency(entry,
-                                                                      curr_combo_box))
+        convert_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Convert",
+                command=lambda: self.convert_currency(entry,
+                                                      curr_combo_box,
+                                                      converted_amt_var))
         convert_btn.place(x=800, y=80)
+
 
 
     '''
     Data_Page functions
     '''
-    def convert_currency(self, entry_obj, combo_box_obj):
-        rates = data.get_exchange_rates()
+    def create_label(self, text_param, x_coord, y_coord):
+        label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                         text=text_param)
+        label.place(x=x_coord, y=y_coord)
 
+    def convert_currency(self, entry_obj, combo_box_obj, convert_amt_var):
         # retrieve user input data
         amount = entry_obj.get()
         code = combo_box_obj.get()
 
-        # this currently creates new labels
-        # each time the convert button is pressed
-        # need to find a widget that replaces
-        for k,v in rates.items():
-            if k == code:
-                convert_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                           text=("%.2f" % (float(amount)*float(v))))
-                convert_amt_lbl.place(x=730, y=110)
-                return ("%.2f" % (float(amount)*float(v)))
+        converted_amt = data.convert_currency(amount, code)
+
+        convert_amt_var.set(("%.2f " + code) % converted_amt)
 
 
     def plot_chart(self, lst_prices, lst_dates):
@@ -421,7 +393,5 @@ if __name__ == '__main__':
 
     app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
     app.mainloop()
-
-
 
 
