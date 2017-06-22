@@ -213,20 +213,30 @@ class Data():
     get the exchange ranges for the
     top 5 most used currencies
     '''
-    def get_exchange_rates(self, convert_amt):
+    def get_exchange_rates(self):
         auth = CoinbaseWalletAuth()
-        req = requests.get(self.api_url + 'exchange-rates', auth=auth).json()
+        req = requests.get(self.api_url + 'exchange-rates',
+                           params='currency=BTC',
+                           auth=auth).json()
         output = dict(req['data']['rates'])
+        return output
 
+        '''
         exchange_list = []
 
-        for k,v in output.iteritems():
-            if (k == 'BTC'):
-                exchange_list.append("%.6f" % (float(convert)*float(value)))
-                exchange_list.append(key)
-            if ((k == 'USD') or (k == 'EUR') or (k == 'JPY') or (k == 'GBP') or (k == 'CHF')):
-                exchange_list.append("%.2f" % (float(convert)*float(value)))
+        for k,v in output.items():
+            if ((k == 'USD') or
+                (k == 'EUR') or
+                (k == 'JPY') or
+                (k == 'GBP') or
+                (k == 'CHF')):
+                exchange_list.append("%.2f" % (float(convert_amt)*float(v)))
+                exchange_list.append(k)
+
+            elif (k == 'BTC'):
+                exchange_list.append("%.6f" % (float(convert_amt)*float(v)))
                 exchange_list.append(k)
 
         return exchange_list
+        '''
 
