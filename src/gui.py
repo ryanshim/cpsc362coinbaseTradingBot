@@ -174,9 +174,6 @@ class Account_Page(tk.Frame):
         # draw account balance header 
         acct_bal_hdr = self.create_label("CURRENT ACCOUNT BALANCE:", 10, 110, True)
 
-        # draw current spot price header
-        price_lbl = self.create_label("CURRENT BTC PRICE: ", 750, 70, True)
-
         # draw account transactions header and table header
         trans_lbl = self.create_label("RECENT TRANSACTIONS", 425, 160, True)
         trans_tbl_lbl = self.create_label(("{0:28s}{1:35s}{2:35s}{3}").format(
@@ -200,7 +197,6 @@ class Account_Page(tk.Frame):
     def create_threads(self):
         _thread.start_new_thread(self.draw_balance, (acct, 60))
         _thread.start_new_thread(self.draw_transactions, (acct, 60))
-        _thread.start_new_thread(self.draw_spot_price, (data, 30))
 
     # draw the current account balance to the tkinter window
     def draw_balance(self, account, delay):
@@ -209,15 +205,6 @@ class Account_Page(tk.Frame):
             bal_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                text=bal + " " + bal_curr) 
             bal_lbl.place(x=235, y=110)
-            time.sleep(delay)
-
-    def draw_spot_price(self, data, delay):
-        while 1:
-            spot_price_lst = data.get_spot_price()
-            spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                      text=spot_price_lst[0] + \
-                                      " " + spot_price_lst[1])
-            spot_price_lbl.place(x=900, y = 70)
             time.sleep(delay)
 
     # draw the latest account transactions
@@ -291,14 +278,6 @@ class Data_Page(tk.Frame):
         seven_day_btn.place(x=515, y=510)
 
         #plot misc. conversion data
-        xchangert_hdr = self.create_label("Exchange Rate Conversion", 700, 30)
-        btc_lbl = self.create_label("BTC -> ", 690, 60)
-        converted_lbl = self.create_label("Converted Amount:", 600, 110)
-
-        # create text entry
-        entry = tk.Entry(self, width=10)
-        entry.place(x=600, y=60)
-
         # get the currency codes available from cb api 
         # might create a separate function in data class
         rates = data.get_exchange_rates()
@@ -306,6 +285,16 @@ class Data_Page(tk.Frame):
         for k,v in rates.items():
             curr_codes.append(k)
         curr_codes.sort()
+
+        xchangert_hdr = self.create_label("Exchange Rate Conversion", 700, 30)
+
+        ''' BTC -> CURRENCY '''
+        btc_lbl = self.create_label("BTC  -> ", 690, 60)
+        converted_lbl = self.create_label("Converted Amount:", 750, 80)
+
+        # create text entry
+        entry = tk.Entry(self, width=10)
+        entry.place(x=600, y=60)
 
         # create currency code combo box
         curr_combo_box = ttk.Combobox(self, state='readonly')
@@ -316,33 +305,97 @@ class Data_Page(tk.Frame):
         converted_amt_var = tk.StringVar()
         converted_amt_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                      textvariable=converted_amt_var)
-        converted_amt_lbl.place(x=750, y=110)
+        converted_amt_lbl.place(x=875, y=80)
 
         # call the conversion function on btn press
         convert_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Convert",
-                command=lambda: self.convert_currency(entry,
-                                                      curr_combo_box,
-                                                      converted_amt_var))
-        convert_btn.place(x=800, y=80)
+                command=lambda: self.convert_currency_btc(entry,
+                                                          curr_combo_box,
+                                                          converted_amt_var))
+        convert_btn.place(x=600, y=80)
 
+        ''' CURRENCY -> BTC '''
+        btc_lbl1 = self.create_label("  -> BTC", 875, 150)
+        converted_lbl1 = self.create_label("Converted Amount:", 750, 175)
 
+        # create text entry
+        entry1 = tk.Entry(self, width=10)
+        entry1.place(x=600, y=150)
 
-    '''
-    Data_Page functions
-    '''
+        # create currency code combo box
+        curr_combo_box1 = ttk.Combobox(self, state='readonly')
+        curr_combo_box1['values'] = curr_codes
+        curr_combo_box1.place(x=695, y=150)
+
+        # create amount label
+        converted_amt_var1 = tk.StringVar()
+        converted_amt_lbl1 = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                     textvariable=converted_amt_var1)
+        converted_amt_lbl1.place(x=875, y=175)
+
+        # call the conversion function on btn press
+        convert_btn1 = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Convert",
+                command=lambda: self.convert_currency_oth(entry1,
+                                                          curr_combo_box1,
+                                                          converted_amt_var1))
+        convert_btn1.place(x=600, y=170)
+
+        ''' DRAW MISC BTC DATA '''
+        # draw the spot price
+        spot_price_lbl = self.create_label("Current Spot Price:", 600, 250)
+        buy_price_lbl = self.create_label("Latest Buy Price:", 600, 275) 
+        sell_price_lbl = self.create_label("Latest Sell Price:", 600, 300)
+
+        self.start_threads()
+
+    def start_threads(self):
+        _thread.start_new_thread(self.draw_spot_price_data, (data, 20))
+        _thread.start_new_thread(self.draw_buy_price, (data, 30))
+        _thread.start_new_thread(self.draw_sell_price, (data, 30))
+
+    def draw_spot_price_data(self, data, delay):
+        while 1:
+            spot_price_lst = data.get_spot_price()
+            spot_price_lbl = self.create_label((spot_price_lst[0] + " " + \
+                                                spot_price_lst[1]), 750, 250)
+            time.sleep(delay)
+
+    def draw_buy_price(self, data, delay):
+        while 1:
+            buy_price = data.get_buy_price()
+            buy_price_lbl = self.create_label((buy_price + " USD"), 750, 275)
+            time.sleep(delay)
+
+    def draw_sell_price(self, data, delay):
+        while 1:
+            sell_price = data.get_sell_price()
+            sell_price_lbl = self.create_label((sell_price + " USD"), 750, 300)
+            time.sleep(delay)
+
     def create_label(self, text_param, x_coord, y_coord):
         label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                          text=text_param)
         label.place(x=x_coord, y=y_coord)
 
-    def convert_currency(self, entry_obj, combo_box_obj, convert_amt_var):
+
+    def convert_currency_btc(self, entry_obj, combo_box_obj, convert_amt_var):
         # retrieve user input data
         amount = entry_obj.get()
         code = combo_box_obj.get()
 
-        converted_amt = data.convert_currency(amount, code)
+        converted_amt = data.convert_currency_btc(amount, code)
 
         convert_amt_var.set(("%.2f " + code) % converted_amt)
+
+
+    def convert_currency_oth(self, entry_obj, combo_box_obj, convert_amt_var):
+        # retrieve user input data
+        amount = entry_obj.get()
+        code = combo_box_obj.get()
+
+        converted_amt = data.convert_currency_oth(amount, code)
+
+        convert_amt_var.set(("%.6f BTC") % converted_amt)
 
 
     def plot_chart(self, lst_prices, lst_dates):
