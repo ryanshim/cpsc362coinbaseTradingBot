@@ -19,6 +19,7 @@ class Data():
         self.spot_price_amt = 0
         self.spot_price_currency = ''
 
+
     '''
     current market btc price
     '''
@@ -31,6 +32,27 @@ class Data():
         self.spot_price_currency = output['data']['currency']
 
         return [self.spot_price_amt, self.spot_price_currency]
+
+
+    '''
+    get most recent buy price
+    '''
+    def get_buy_price(self):
+        auth = CoinbaseWalletAuth()
+        req = requests.get(self.api_url + "prices/BTC-USD/buy", auth=auth)
+        output = dict(req.json())
+        return output['data']['amount']
+
+
+    '''
+    get most recent sell price
+    '''
+    def get_sell_price(self):
+        auth = CoinbaseWalletAuth()
+        req = requests.get(self.api_url + "prices/BTC-USD/sell", auth=auth)
+        output = dict(req.json())
+        return output['data']['amount']
+
 
     '''
     get prices helper function
@@ -51,6 +73,7 @@ class Data():
                 print("Price data for: " + str(time) + " failed to retrieve\n")
 
         return prices
+
 
     '''
     get historical prices of beg each month
@@ -84,6 +107,7 @@ class Data():
 
         return prices
 
+
     '''
     get historical prices of 
     past 4 weeks
@@ -99,6 +123,7 @@ class Data():
 
         return prices
 
+
     '''
     get historical prices of beg
     of last 7 days
@@ -113,6 +138,7 @@ class Data():
         prices = self.get_prices_helper(time_points)
 
         return prices
+
 
     '''
     get prices of the past 3 years
@@ -222,12 +248,17 @@ class Data():
         return output
 
     '''
-    convert currency (BTC -> USD)
+    convert currency (BTC -> OTHER)
     '''
-    def convert_currency(self, amount, code):
+    def convert_currency_btc(self, amount, code):
         rates = self.get_exchange_rates()
+        return float(amount) * float(rates[code])
 
-        for k,v in rates.items():
-            if k == code:
-                return float(amount) * float(v)
+
+    '''
+    convert currency (OTHER -> BTC)
+    '''
+    def convert_currency_oth(self, amount, code):
+        rates = self.get_exchange_rates()
+        return float(amount) / float(rates[code])
 
