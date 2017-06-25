@@ -20,4 +20,4 @@ The application will display transaction and wallet information through a GUI cr
 * Python 3
 * Coinbase Client
 * Matplotlib
-* Scikit
+* Scikit & sklearn
