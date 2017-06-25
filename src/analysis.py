@@ -25,9 +25,16 @@ class Analysis:
 
         self.prices.reverse()
 
-    def regr_three_yr(self):
-        days = self.total_days
-        prices = self.prices
+    def calc_regression(self, days_index, prices_index):
+        if prices_index == 0:   # condition for 3 yr
+            days = self.total_days
+            prices = self.prices
+        elif prices_index == 1087:  # condition for 1 wk
+            days = self.total_days[:days_index]
+            prices = self.prices[prices_index:]
+        else:
+            days = self.total_days[:days_index]
+            prices = self.prices[prices_index-1:]
 
         days = np.reshape(days, (len(days), 1))
         prices = np.reshape(prices, (len(prices), 1))
@@ -38,37 +45,27 @@ class Analysis:
 
         data_points = []
         data_points.append(regr.predict(0)[0][0])
-        data_points.append(regr.predict(1095)[0][0])
+        data_points.append(regr.predict(days_index)[0][0])
 
-        return self.total_days, self.prices, [0, self.total_days[1093]], data_points
-
-    def regr_one_yr(self):
-        days = self.total_days[:365]
-        prices = self.prices[729:]
-        print(len(prices))
-
-        days = np.reshape(days, (len(days), 1))
-        prices = np.reshape(prices, (len(prices), 1))
-
-        regr = linear_model.LinearRegression()
-
-        regr.fit(days, prices)
-
-        data_points = []
-        data_points.append(regr.predict(0)[0][0])
-        data_points.append(regr.predict(365)[0][0])
-
-        return self.total_days[:364], self.prices[730:], [0, 364], data_points
-
-
+        if prices_index == 0:   # condition 3 yr
+            return self.total_days, self.prices, [0, self.total_days[days_index-2]], data_points
+        elif prices_index == 1087:  # condition 1 wk
+            return self.total_days[:days_index], self.prices[prices_index:], [0, days_index-1], data_points
+        else:
+            return self.total_days[:days_index-1], self.prices[prices_index:], [0, days_index-1], data_points
+ 
 if __name__ == '__main__':
     analysis_1 = Analysis()
-    scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.regr_three_yr()
-    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.regr_one_yr() 
+    scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(1095, 0)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(365, 730)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(184, 911)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(92, 1003)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(31, 1064)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(22, 1073)
+    #scatter_days, scatter_prices, regr_days, regr_prices = analysis_1.calc_regression(7, 1087)
 
-
-    plt.scatter(scatter_days, scatter_prices, s=1)
-    plt.plot(regr_days, regr_prices, ls='--', color='#9a0000')
+    plt.plot(scatter_days, scatter_prices)
+    plt.plot(regr_days, regr_prices, ls='--', lw=0.75, color='#9a0000')
     plt.show()
 
 
