@@ -96,7 +96,7 @@ class Analysis:
     ''' get % delta since last 6 months '''
     def calc_six_mn_change(self, cls_data):
         six_mon_prices = cls_data.get_6_month_prices()
-        six_mon = float(six_mon_prices[5][0])
+        six_mon = float(six_mon_prices[0][0]) # why is this one in increasing order?
         return self.calc_perc_delta(six_mon, cls_data)
 
     '''
