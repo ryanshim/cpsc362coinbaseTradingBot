@@ -30,9 +30,8 @@ WIN_WIDTH = 600
 BG_COLOR = "#FFFFFF"
 FG_COLOR = "#303642"
 INC_COLOR = "#005D12"
-DEC_COLOR = "#670000"
+DEC_COLOR = "#AB0000"
 
-spot_price_var = []
 
 class Gui(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -442,19 +441,51 @@ class Analysis_Page(tk.Frame):
 
         # percent changes labels
         perc_change_lbl = self.create_label("Percent Changes", 700, 50, True)
-        one_dy_lbl = self.create_label("24 Hr.:\t", 600, 100)
-        one_wk_lbl = self.create_label("1 Wk.:\t", 600, 130)
-        three_wk_lbl = self.create_label("3 Wk.:\t", 600, 160)
-        one_mn_lbl = self.create_label("1 Mon.:\t", 600, 190)
-        three_mn_lbl = self.create_label("3 Mon.:\t", 600, 220)
-        six_mn_lbl = self.create_label("6 Mon.:\t", 600, 250)
+        one_dy_lbl = self.create_label("24 Hr.:\t", 650, 100)
+        one_wk_lbl = self.create_label("1 Wk.:\t", 650, 130)
+        three_wk_lbl = self.create_label("3 Wk.:\t", 650, 160)
+        one_mn_lbl = self.create_label("1 Mon.:\t", 850, 100)
+        three_mn_lbl = self.create_label("3 Mon.:\t", 850, 130)
+        six_mn_lbl = self.create_label("6 Mon.:\t", 850, 160)
+
+        # retrieve regression analysis data for plotting
+        lst_total_days, lst_prices, lst_regr_days, lst_regr_prices = analysis.calc_regression(1095,0)
+        self.plot_chart(lst_prices, lst_total_days, lst_regr_days, lst_regr_prices)
+
+        # plot controller buttons
+        three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Year",
+                command=lambda: self.plot_chart_helper(1095,0))
+        three_yr_btn.place(x=25, y=510)
+
+        one_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="1 Year",
+                command=lambda: self.plot_chart_helper(365, 730))
+        one_yr_btn.place(x=100, y=510)
+
+        six_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="6 Month",
+                command=lambda: self.plot_chart_helper(184,911))
+        six_mon_btn.place(x=175, y=510)
+
+        three_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Month",
+                command=lambda: self.plot_chart_helper(92,1003))
+        three_mon_btn.place(x=260, y=510)
+
+        one_mon_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="1 Month",
+                command=lambda: self.plot_chart_helper(31,1064))
+        one_mon_btn.place(x=345, y=510)
+
+        three_wk_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Week",
+                command=lambda: self.plot_chart_helper(22,1073))
+        three_wk_btn.place(x=433, y=510)
+
+        seven_day_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="7 Day",
+                command=lambda: self.plot_chart_helper(7,1087))
+        seven_day_btn.place(x=515, y=510)
 
         #print(cur_spot_price)
         _thread.start_new_thread(self.draw_perc_change, (30,))
 
 
     def draw_perc_change(self, delay):
-        count = 0
         while 1:
             #test_spot_price = data.get_spot_price()
             one_dy_perc_change = analysis.calc_one_dy_change(data)
@@ -464,16 +495,20 @@ class Analysis_Page(tk.Frame):
             three_mn_perc_change = analysis.calc_three_mn_change(data)
             six_mn_perc_change = analysis.calc_six_mn_change(data)
 
-            print(count)
-            count += 1
+            lst_perc_changes = [one_dy_perc_change, one_wk_perc_change, three_wk_perc_change,
+                                one_mn_perc_change, three_mn_perc_change, six_mn_perc_change]
 
-            self.create_perc_delta_lbl(one_dy_perc_change, 650, 100)
-            self.create_perc_delta_lbl(one_wk_perc_change, 650, 130)
-            self.create_perc_delta_lbl(three_wk_perc_change, 650, 160)
-            self.create_perc_delta_lbl(one_mn_perc_change, 650, 190)
-            self.create_perc_delta_lbl(three_mn_perc_change, 650, 220)
-            self.create_perc_delta_lbl(six_mn_perc_change, 650, 250)
+            spacing = 100
+            for x in lst_perc_changes[:3]:
+                self.create_perc_delta_lbl(x, 700, spacing)
+                spacing += 30
+            spacing = 100
+            for y in lst_perc_changes[3:]:
+                self.create_perc_delta_lbl(y, 900, spacing)
+                spacing += 30
+
             time.sleep(delay)
+
 
     def create_label(self, text_param, x_coord, y_coord, bold=False):
         if bold:
@@ -487,11 +522,54 @@ class Analysis_Page(tk.Frame):
 
     def create_perc_delta_lbl(self, text_param, x_coord, y_coord, increase=False):
         if text_param > 0:
-            label = tk.Label(self, bg=BG_COLOR, fg=INC_COLOR, text=str(text_param))
+            label = tk.Label(self, bg=BG_COLOR, fg=INC_COLOR,
+                             text=("%.2f%%" % text_param))
             label.place(x=x_coord, y=y_coord)
         else:
-            label = tk.Label(self, bg=BG_COLOR, fg=DEC_COLOR, text=str(text_param))
+            label = tk.Label(self, bg=BG_COLOR, fg=DEC_COLOR,
+                             text=("%.2f%%" % text_param))
             label.place(x=x_coord, y=y_coord)
+
+
+    def plot_chart_helper(self, days, prices):
+        lst_prices, lst_total_days, lst_regr_days, lst_regr_prices = analysis.calc_regression(days, prices)
+        self.plot_chart(lst_total_days, lst_prices, lst_regr_days, lst_regr_prices)
+
+
+    def plot_chart(self, lst_prices, lst_dates, lst_regr_days, lst_regr_data):
+        # insert an overview of prices of btc
+        # for past 3 years
+        f = matplotlib.figure.Figure(figsize=(6,5), dpi=100, facecolor=BG_COLOR)
+        a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
+
+        plot_title = "BTC Trends"
+        a.set_title(plot_title, color=FG_COLOR)
+
+        # configure the plot characteristics 
+        a.spines['top'].set_color(FG_COLOR)
+        a.spines['bottom'].set_color(FG_COLOR)
+        a.spines['left'].set_color(FG_COLOR)
+        a.spines['right'].set_color(FG_COLOR)
+        a.tick_params(axis='x', colors=FG_COLOR, labelsize='small', gridOn=True)
+        a.tick_params(axis='y', colors=FG_COLOR, labelsize='small', gridOn=True)
+        a.yaxis.label.set_color(FG_COLOR)
+        a.xaxis.label.set_color(FG_COLOR)
+
+        a.plot(lst_dates, lst_prices) # plot the data
+
+        # if-else condition set for trendline color
+        if lst_regr_data[0] > lst_regr_data[1]:
+            a.plot(lst_regr_days, lst_regr_data, ls="--", lw=0.75, color=DEC_COLOR)
+        else:
+            a.plot(lst_regr_days, lst_regr_data, ls="--", lw=0.75, color=INC_COLOR)
+        
+        labels = a.get_xticklabels()
+        plt.setp(labels, rotation=30) # rotate labels by 30 deg
+
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        canvas.get_tk_widget().place(x=0, y=0)
+
 
 
 if __name__ == '__main__':
