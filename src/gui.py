@@ -19,7 +19,7 @@ from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
 
 # backend class imports
 from account import Account
-#from analysis import Analysis
+from analysis import Analysis
 from data import Data
 
 # gui globals
@@ -29,6 +29,8 @@ WIN_LENGTH = 1000
 WIN_WIDTH = 600
 BG_COLOR = "#FFFFFF"
 FG_COLOR = "#303642"
+INC_COLOR = "#005D12"
+DEC_COLOR = "#670000"
 
 spot_price_var = []
 
@@ -179,10 +181,9 @@ class Account_Page(tk.Frame):
         trans_tbl_lbl = self.create_label(("{0:28s}{1:35s}{2:35s}{3}").format(
                             "TRANSACTION TIME", "TYPE", "AMOUNT", "STATUS"), 215, 195)
 
-        # begin threads
+        # initiate threads
         self.create_threads()
 
-    # initiate threads function
     def create_label(self, text_param, x_coord, y_coord, bold=False):
         if bold:
             label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
@@ -356,6 +357,9 @@ class Data_Page(tk.Frame):
     def draw_spot_price_data(self, data, delay):
         while 1:
             spot_price_lst = data.get_spot_price()
+
+            cur_spot_price = spot_price_lst[0] # TEST
+
             spot_price_lbl = self.create_label((spot_price_lst[0] + " " + \
                                                 spot_price_lst[1]), 750, 250)
             time.sleep(delay)
@@ -432,16 +436,69 @@ class Data_Page(tk.Frame):
 class Analysis_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
-        label = tk.Label(self, text="BTC Analysis Page", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+        title = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                         text="BTC Price Analysis", font=LARGE_FONT)
+        title.place(x=400, y=10)
+
+        # percent changes labels
+        perc_change_lbl = self.create_label("Percent Changes", 700, 50, True)
+        one_dy_lbl = self.create_label("24 Hr.:\t", 600, 100)
+        one_wk_lbl = self.create_label("1 Wk.:\t", 600, 130)
+        three_wk_lbl = self.create_label("3 Wk.:\t", 600, 160)
+        one_mn_lbl = self.create_label("1 Mon.:\t", 600, 190)
+        three_mn_lbl = self.create_label("3 Mon.:\t", 600, 220)
+        six_mn_lbl = self.create_label("6 Mon.:\t", 600, 250)
+
+        #print(cur_spot_price)
+        _thread.start_new_thread(self.draw_perc_change, (30,))
 
 
+    def draw_perc_change(self, delay):
+        count = 0
+        while 1:
+            #test_spot_price = data.get_spot_price()
+            one_dy_perc_change = analysis.calc_one_dy_change(data)
+            one_wk_perc_change = analysis.calc_one_wk_change(data)
+            three_wk_perc_change = analysis.calc_three_wk_change(data)
+            one_mn_perc_change = analysis.calc_one_mn_change(data)
+            three_mn_perc_change = analysis.calc_three_mn_change(data)
+            six_mn_perc_change = analysis.calc_six_mn_change(data)
+
+            print(count)
+            count += 1
+
+            self.create_perc_delta_lbl(one_dy_perc_change, 650, 100)
+            self.create_perc_delta_lbl(one_wk_perc_change, 650, 130)
+            self.create_perc_delta_lbl(three_wk_perc_change, 650, 160)
+            self.create_perc_delta_lbl(one_mn_perc_change, 650, 190)
+            self.create_perc_delta_lbl(three_mn_perc_change, 650, 220)
+            self.create_perc_delta_lbl(six_mn_perc_change, 650, 250)
+            time.sleep(delay)
+
+    def create_label(self, text_param, x_coord, y_coord, bold=False):
+        if bold:
+            label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                             text=text_param, font=HEADER_FONT)
+            label.place(x=x_coord, y=y_coord)
+        else:
+            label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR, text=text_param)
+            label.place(x=x_coord, y=y_coord)
+
+
+    def create_perc_delta_lbl(self, text_param, x_coord, y_coord, increase=False):
+        if text_param > 0:
+            label = tk.Label(self, bg=BG_COLOR, fg=INC_COLOR, text=str(text_param))
+            label.place(x=x_coord, y=y_coord)
+        else:
+            label = tk.Label(self, bg=BG_COLOR, fg=DEC_COLOR, text=str(text_param))
+            label.place(x=x_coord, y=y_coord)
 
 
 if __name__ == '__main__':
     # instantiate core class objects
     data = Data()
     acct = Account()
+    analysis = Analysis()
     app = Gui()
 
     app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
