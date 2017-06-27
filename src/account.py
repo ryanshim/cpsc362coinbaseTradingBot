@@ -5,6 +5,7 @@ bitcoin account will go here
 import json
 import requests
 from coinbasewalletauth import CoinbaseWalletAuth
+from data import Data
 
 class Account():
     def __init__(self):
@@ -73,4 +74,30 @@ class Account():
 
     def get_last_trans_price(self):
         return self.acct_last_trans_price
+
+    ''' execute a buy/sell '''
+    def execute_buy_sell(self, amount, buy_sell, upper_threshold, lower_threshold, currency_code):
+        auth = CoinbaseWalletAuth()
+
+        # get account id
+        req = requests.get(self.api_url + "accounts", auth=auth)
+        output = dict(req.json())
+        acct_id = output['data'][0]['id']
+
+        # get payment id
+        req = requests.get(self.api_url + "payment-methods", auth=auth)
+        output = dict(req.json())
+        pmt_id = output['data'][0]['id']
+
+        data = Data()
+
+        # initate a buy/sell
+        if buy_sell == "Buy":
+            spot_price = float(data.get_spot_price()[0])
+            if spot_price <= lower_threshold:
+                payload = {'amount': str(amount), 'currency': currency_code, 'payment_method':pmt_id}
+                auth = CoinbaseWalletAuth()
+                req = requests.post(self.api_url + "accounts/" + acct_id + "/buys", data=payload)
+        else:
+            print("Execute Sell")
 
