@@ -236,8 +236,7 @@ class Data():
 
 
     '''
-    get the exchange ranges for the
-    top 5 most used currencies
+    get the exchange ranges available on CB
     '''
     def get_exchange_rates(self):
         auth = CoinbaseWalletAuth()
