@@ -143,12 +143,22 @@ class Main_Page(tk.Frame):
         _thread.start_new_thread(self.retrieve_spot_price, (data, 30))
 
     def retrieve_spot_price(self, cls_data, delay):
-        while 1:
-            spot_price = cls_data.get_spot_price()
-            spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                                      text=spot_price[0] + " " + spot_price[1])
-            spot_price_lbl.place(x=510, y=65)
-            time.sleep(delay)
+        try:
+            while 1:
+                spot_price = cls_data.get_spot_price()
+                spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                          text=spot_price[0] + " " + spot_price[1])
+                spot_price_lbl.place(x=510, y=65)
+                time.sleep(delay)
+        except RuntimeError:
+            print("Failed to load spot price")
+            print("Trying again...")
+            while 1:
+                spot_price = cls_data.get_spot_price()
+                spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                          text=spot_price[0] + " " + spot_price[1])
+                spot_price_lbl.place(x=510, y=65)
+                time.sleep(delay)
 
 
 
@@ -200,38 +210,48 @@ class Account_Page(tk.Frame):
 
     # draw the current account balance to the tkinter window
     def draw_balance(self, account, delay):
-        while 1:
-            bal, bal_curr = account.get_acct_balance()
-            bal_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
-                               text=bal + " " + bal_curr) 
-            bal_lbl.place(x=235, y=110)
-            time.sleep(delay)
+        try:
+            while 1:
+                bal, bal_curr = account.get_acct_balance()
+                bal_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
+                                   text=bal + " " + bal_curr) 
+                bal_lbl.place(x=235, y=110)
+                time.sleep(delay)
+        except RuntimeError:
+            print("Failed to retrieve balance")
+            print("Trying again...")
+            self.draw_balance(account, delay)
 
     # draw the latest account transactions
     def draw_transactions(self, account, delay):
-        while 1:
-            trans_lst = account.get_acct_transactions()
-            lbl = {}
-            count = 0
-            spacing = 0
+        try:
+            while 1:
+                trans_lst = account.get_acct_transactions()
+                lbl = {}
+                count = 0
+                spacing = 0
 
-            for t in trans_lst:
-                lbl[count] = self.create_label(
-                                ("{0:30s}{1:10s}{2:13s}{3:6s}" + \
-                                "{4:4s}{5:8s}{6:12s}{7}").format(
-                                trans_lst[count]['created_at'],
-                                trans_lst[count]['type'].upper(),
-                                str(trans_lst[count]['amount']['amount']),
-                                trans_lst[count]['amount']['currency'],
-                                "~",
-                                trans_lst[count]['native_amount']['amount'],
-                                trans_lst[count]['native_amount']['currency'],
-                                trans_lst[count]['status'].upper()),
-                                200, (215 + spacing), False)
-                spacing += 30
-                count += 1
+                for t in trans_lst:
+                    lbl[count] = self.create_label(
+                                    ("{0:30s}{1:10s}{2:13s}{3:6s}" + \
+                                    "{4:4s}{5:8s}{6:12s}{7}").format(
+                                    trans_lst[count]['created_at'],
+                                    trans_lst[count]['type'].upper(),
+                                    str(trans_lst[count]['amount']['amount']),
+                                    trans_lst[count]['amount']['currency'],
+                                    "~",
+                                    trans_lst[count]['native_amount']['amount'],
+                                    trans_lst[count]['native_amount']['currency'],
+                                    trans_lst[count]['status'].upper()),
+                                    200, (215 + spacing), False)
+                    spacing += 30
+                    count += 1
 
-            time.sleep(delay)
+                time.sleep(delay)
+        except RuntimeError:
+            print("Failed to retrieve transactions")
+            print("Trying again...")
+            self.draw_transactions(account, delay)
 
 
 
@@ -439,18 +459,22 @@ class Analysis_Page(tk.Frame):
                          text="BTC Price Analysis", font=LARGE_FONT)
         title.place(x=400, y=10)
 
+        ''' labels and buttons section '''
         # percent changes labels
         perc_change_lbl = self.create_label("Percent Changes", 700, 50, True)
-        one_dy_lbl = self.create_label("24 Hr.:\t", 650, 100)
-        one_wk_lbl = self.create_label("1 Wk.:\t", 650, 130)
-        three_wk_lbl = self.create_label("3 Wk.:\t", 650, 160)
-        one_mn_lbl = self.create_label("1 Mon.:\t", 850, 100)
-        three_mn_lbl = self.create_label("3 Mon.:\t", 850, 130)
-        six_mn_lbl = self.create_label("6 Mon.:\t", 850, 160)
+        one_dy_lbl = self.create_label("24 Hr.:\t", 600, 100)
+        one_wk_lbl = self.create_label("1 Wk.:\t", 600, 130)
+        three_wk_lbl = self.create_label("3 Wk.:\t", 600, 160)
+        one_mn_lbl = self.create_label("1 Mon.:\t", 800, 100)
+        three_mn_lbl = self.create_label("3 Mon.:\t", 800, 130)
+        six_mn_lbl = self.create_label("6 Mon.:\t", 800, 160)
 
-        # retrieve regression analysis data for plotting
-        lst_total_days, lst_prices, lst_regr_days, lst_regr_prices = analysis.calc_regression(1095,0)
-        self.plot_chart(lst_prices, lst_total_days, lst_regr_days, lst_regr_prices)
+        # Buy/Sell title
+        buy_sell_title = self.create_label("Execute Price Limit Buy/Sell", 650, 200, True)
+        upper_threshold_hdr = self.create_label("Input upper price threshold", 600, 270, True)
+        lower_threshold_hdr = self.create_label("Input lower price threshold", 600, 330, True)
+        upper_currency_lbl = self.create_label("USD", 730, 295)
+        lower_currency_lbl = self.create_label("USD", 730, 355)
 
         # plot controller buttons
         three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Year",
@@ -481,8 +505,65 @@ class Analysis_Page(tk.Frame):
                 command=lambda: self.plot_chart_helper(7,1087))
         seven_day_btn.place(x=515, y=510)
 
-        #print(cur_spot_price)
+        # buy/sell execute button
+        buy_sell_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Execute",
+                command=lambda: self.execute_buy_sell_helper(buy_sell_amt_entry, upper_entry,
+                                                             lower_entry, buy_sell_combo,
+                                                             currency_combo))
+        buy_sell_btn.place(x=600, y=385)
+
+        ''' core functionality section '''
+        # retrieve regression analysis data for plotting
+        lst_total_days, lst_prices, lst_regr_days, lst_regr_prices = analysis.calc_regression(1095,0)
+        self.plot_chart(lst_prices, lst_total_days, lst_regr_days, lst_regr_prices)
+
+        # entry box for buy/sell selection
+        default_val = tk.StringVar()
+        buy_sell_amt_entry = tk.Entry(self, width=15, textvariable=default_val)
+        buy_sell_amt_entry.place(x=600, y=230)
+        default_val.set("Enter amount")
+
+        # entry box for upper price threshold
+        default_upper = tk.StringVar()
+        upper_entry = tk.Entry(self, width=15, textvariable=default_upper)
+        upper_entry.place(x=600, y=295)
+        default_upper.set("Enter amount")
+
+        # entry box for lower price threshold
+        default_lower = tk.StringVar()
+        lower_entry = tk.Entry(self, width=15, textvariable=default_lower)
+        lower_entry.place(x=600, y=355)
+        default_lower.set("Enter amount")
+
+        # combobox for buy/sell selection
+        buy_sell_combo = ttk.Combobox(self, width=10, state="readonly")
+        buy_sell_combo["values"] = ["Buy", "Sell"]
+        buy_sell_combo.place(x=750, y=230)
+
+        # combobox for currency codes
+        xchangert_dict = data.get_exchange_rates()
+        currency_lst = []
+        for k,v in xchangert_dict.items():
+            currency_lst.append(k)
+        currency_lst.sort()
+        currency_combo = ttk.Combobox(self, width=5, state="readonly")
+        currency_combo["values"] = currency_lst
+        currency_combo.place(x=850, y=230)
+
+
+        # start threaded methods
         _thread.start_new_thread(self.draw_perc_change, (30,))
+
+    def execute_buy_sell_helper(self, buy_sell_amt_entry, upper_entry,
+                                lower_entry, buy_sell_combo, currency_combo):
+        amount = float(buy_sell_amt_entry.get())
+        buy_sell = buy_sell_combo.get()
+        upper_threshold = float(upper_entry.get())
+        lower_threshold = float(lower_entry.get())
+        currency_code = currency_combo.get()
+
+        acct.execute_buy_sell(amount, buy_sell, upper_threshold, lower_threshold, currency_code)
+
 
 
     def draw_perc_change(self, delay):
@@ -500,11 +581,11 @@ class Analysis_Page(tk.Frame):
 
             spacing = 100
             for x in lst_perc_changes[:3]:
-                self.create_perc_delta_lbl(x, 700, spacing)
+                self.create_perc_delta_lbl(x, 675, spacing)
                 spacing += 30
             spacing = 100
             for y in lst_perc_changes[3:]:
-                self.create_perc_delta_lbl(y, 900, spacing)
+                self.create_perc_delta_lbl(y, 875, spacing)
                 spacing += 30
 
             time.sleep(delay)
