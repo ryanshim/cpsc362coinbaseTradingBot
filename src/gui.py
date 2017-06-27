@@ -469,12 +469,17 @@ class Analysis_Page(tk.Frame):
         three_mn_lbl = self.create_label("3 Mon.:\t", 800, 130)
         six_mn_lbl = self.create_label("6 Mon.:\t", 800, 160)
 
-        # Buy/Sell title
+        # Buy/Sell title and headers
         buy_sell_title = self.create_label("Execute Price Limit Buy/Sell", 650, 200, True)
-        upper_threshold_hdr = self.create_label("Input upper price threshold", 600, 270, True)
-        lower_threshold_hdr = self.create_label("Input lower price threshold", 600, 330, True)
-        upper_currency_lbl = self.create_label("USD", 730, 295)
-        lower_currency_lbl = self.create_label("USD", 730, 355)
+        buy_sell_status_hdr = self.create_label("Buy/Sell Status: ", 600, 350, True)
+
+        status_msg = tk.StringVar()
+        buy_sell_msg_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR, textvariable=status_msg)
+        buy_sell_msg_lbl.place(x=600, y=375)
+
+        # account balance lbl
+
+
 
         # plot controller buttons
         three_yr_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="3 Year",
@@ -507,10 +512,9 @@ class Analysis_Page(tk.Frame):
 
         # buy/sell execute button
         buy_sell_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Execute",
-                command=lambda: self.execute_buy_sell_helper(buy_sell_amt_entry, upper_entry,
-                                                             lower_entry, buy_sell_combo,
-                                                             currency_combo))
-        buy_sell_btn.place(x=600, y=385)
+                command=lambda: self.initiate_buy_sell_helper(buy_sell_amt_entry, buy_sell_combo,
+                                                              currency_combo, status_msg))
+        buy_sell_btn.place(x=600, y=300)
 
         ''' core functionality section '''
         # retrieve regression analysis data for plotting
@@ -520,25 +524,13 @@ class Analysis_Page(tk.Frame):
         # entry box for buy/sell selection
         default_val = tk.StringVar()
         buy_sell_amt_entry = tk.Entry(self, width=15, textvariable=default_val)
-        buy_sell_amt_entry.place(x=600, y=230)
+        buy_sell_amt_entry.place(x=600, y=260)
         default_val.set("Enter amount")
-
-        # entry box for upper price threshold
-        default_upper = tk.StringVar()
-        upper_entry = tk.Entry(self, width=15, textvariable=default_upper)
-        upper_entry.place(x=600, y=295)
-        default_upper.set("Enter amount")
-
-        # entry box for lower price threshold
-        default_lower = tk.StringVar()
-        lower_entry = tk.Entry(self, width=15, textvariable=default_lower)
-        lower_entry.place(x=600, y=355)
-        default_lower.set("Enter amount")
 
         # combobox for buy/sell selection
         buy_sell_combo = ttk.Combobox(self, width=10, state="readonly")
         buy_sell_combo["values"] = ["Buy", "Sell"]
-        buy_sell_combo.place(x=750, y=230)
+        buy_sell_combo.place(x=750, y=260)
 
         # combobox for currency codes
         xchangert_dict = data.get_exchange_rates()
@@ -548,21 +540,46 @@ class Analysis_Page(tk.Frame):
         currency_lst.sort()
         currency_combo = ttk.Combobox(self, width=5, state="readonly")
         currency_combo["values"] = currency_lst
-        currency_combo.place(x=850, y=230)
+        currency_combo.place(x=850, y=260)
 
 
         # start threaded methods
         _thread.start_new_thread(self.draw_perc_change, (30,))
 
-    def execute_buy_sell_helper(self, buy_sell_amt_entry, upper_entry,
-                                lower_entry, buy_sell_combo, currency_combo):
+    def initiate_buy_sell_helper(self, buy_sell_amt_entry, buy_sell_combo, currency_combo, status_msg):
         amount = float(buy_sell_amt_entry.get())
         buy_sell = buy_sell_combo.get()
-        upper_threshold = float(upper_entry.get())
-        lower_threshold = float(lower_entry.get())
         currency_code = currency_combo.get()
 
-        acct.execute_buy_sell(amount, buy_sell, upper_threshold, lower_threshold, currency_code)
+        spot_price = data.get_spot_price()[0]
+
+        if buy_sell == "Buy":
+            status_msg.set("You are about to buy " + str(amount) + \
+                           " " + currency_code + " at price " + spot_price)
+            confirm_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Confirm",
+                                    command=lambda: btn_group_action(amount, currency_code, buy_sell, status_msg))
+            confirm_btn.place(x=600, y=410)
+
+        elif buy_sell == "Sell":
+            status_msg.set("You are about to sell " + str(amount) + \
+                           " " + currency_code + " at price " + spot_price)
+            confirm_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Confirm",
+                                    command=lambda: btn_group_action(amount, currency_code, buy_sell, status_msg))
+            confirm_btn.place(x=600, y=410)
+
+
+        def btn_group_action(amount, currency_code, buy_sell, status_msg):
+            if buy_sell == "Buy":
+                acct.execute_buy(amount, currency_code)
+                status_msg.set("Buy order placed.")
+                confirm_btn.destroy()
+            else:
+                acct.execute_sell(amount, currency_code)
+                status_msg.set("Sell order placed.")
+                confirm_btn.destroy()
+                
+
+
 
 
 
