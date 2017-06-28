@@ -75,9 +75,7 @@ class Gui(tk.Tk):
             self.frames[fm] = frame
             frame.grid(row=0, column=0, sticky='nsew')  # sticky (stretch win items north
                                                         # south east west)
-
         self.show_frame(Main_Page)
-
 
     def show_frame(self, cont):
         frame = self.frames[cont]
@@ -127,12 +125,6 @@ class Main_Page(tk.Frame):
         canvas.show()
         canvas.get_tk_widget().place(x=100, y=60)
 
-        '''
-        # matplotlib toolbar
-        toolbar = NavigationToolbar2TkAgg(canvas, self)
-        toolbar.update()
-        canvas._tkcanvas.place(x=(WIN_LENGTH // 10), y=80)
-        '''
         # display last spot price
         price_lbl = tk.Label(self, text="Last BTC price: ", bg=BG_COLOR, fg=FG_COLOR)
         price_lbl.place(x=410, y=65)
@@ -140,25 +132,23 @@ class Main_Page(tk.Frame):
 
 
     def start_threads_main(self):
-        _thread.start_new_thread(self.retrieve_spot_price, (data, 30))
+        _thread.start_new_thread(self.retrieve_spot_price, (data, 10))
 
     def retrieve_spot_price(self, cls_data, delay):
-        try:
-            while 1:
+        while 1:
+            try:
                 spot_price = cls_data.get_spot_price()
                 spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                           text=spot_price[0] + " " + spot_price[1])
                 spot_price_lbl.place(x=510, y=65)
-                time.sleep(delay)
-        except RuntimeError:
-            print("Failed to load spot price")
-            print("Trying again...")
-            while 1:
+            except RuntimeError:
+                print("Failed to load spot price")
+                print("Trying again...")
                 spot_price = cls_data.get_spot_price()
                 spot_price_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                           text=spot_price[0] + " " + spot_price[1])
                 spot_price_lbl.place(x=510, y=65)
-                time.sleep(delay)
+            time.sleep(delay)
 
 
 
@@ -169,26 +159,31 @@ class Account_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
         # Page title
-        pg_title = tk.Label(self, text="Coinbase Account Page",
+        pg_title = tk.Label(self, text="Coinbase Account",
                          font=LARGE_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        pg_title.place(x=420, y=30)
+        pg_title.place(x=430, y=30)
 
         # Draw data
         # draw account name label
-        acct_name_hdr = self.create_label("ACCOUNT NAME:\t\t", 10, 70, True)
-        acct_name_lbl = self.create_label(acct.get_acct_name(), 235, 70, False)
+        acct_name_hdr = self.create_label("ACCOUNT NAME:", 10, 70, True)
+        acct_name_lbl = self.create_label(acct.get_acct_name(), 150, 70, False)
 
         # draw account id label
-        acct_id_hdr_lbl = self.create_label("ACCOUNT ID:\t\t", 10, 90, True)
-        acct_id_lbl = self.create_label(acct.get_acct_id(), 235, 90, False)
+        acct_id_hdr_lbl = self.create_label("BTC ADDRESS:", 10, 90, True)
+        acct_id_lbl = self.create_label(acct.get_acct_id(), 150, 90, False)
 
         # draw account balance header 
-        acct_bal_hdr = self.create_label("CURRENT ACCOUNT BALANCE:", 10, 110, True)
+        acct_bal_hdr = self.create_label("CURRENT ACCOUNT BALANCE:", 600, 70, True)
+
+        # draw username
+        username = acct.get_username()
+        acct_usr_hdr = self.create_label("USERNAME:", 10, 110, True)
+        acct_usr_lbl = self.create_label(acct.get_username(), 150, 110)
 
         # draw account transactions header and table header
         trans_lbl = self.create_label("RECENT TRANSACTIONS", 425, 160, True)
-        trans_tbl_lbl = self.create_label(("{0:28s}{1:35s}{2:35s}{3}").format(
-                            "TRANSACTION TIME", "TYPE", "AMOUNT", "STATUS"), 215, 195)
+        trans_tbl_lbl = self.create_label(("{0:25s}{1:32s}{2:33s}{3}").format(
+                            "TRANSACTION TIME", "TYPE", "AMOUNT", "STATUS"), 215, 195, True)
 
         # initiate threads
         self.create_threads()
@@ -215,7 +210,7 @@ class Account_Page(tk.Frame):
                 bal, bal_curr = account.get_acct_balance()
                 bal_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
                                    text=bal + " " + bal_curr) 
-                bal_lbl.place(x=235, y=110)
+                bal_lbl.place(x=830, y=70)
                 time.sleep(delay)
         except RuntimeError:
             print("Failed to retrieve balance")
@@ -257,6 +252,7 @@ class Account_Page(tk.Frame):
 
 
 
+''' BTC Data Page '''
 class Data_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
@@ -360,7 +356,7 @@ class Data_Page(tk.Frame):
                                                           converted_amt_var1))
         convert_btn1.place(x=600, y=170)
 
-        ''' DRAW MISC BTC DATA '''
+        ''' Draw misc BTC data '''
         # draw the spot price
         spot_price_lbl = self.create_label("Current Spot Price:", 600, 250)
         buy_price_lbl = self.create_label("Latest Buy Price:", 600, 275) 
@@ -373,27 +369,49 @@ class Data_Page(tk.Frame):
         _thread.start_new_thread(self.draw_buy_price, (data, 30))
         _thread.start_new_thread(self.draw_sell_price, (data, 30))
 
+
     def draw_spot_price_data(self, data, delay):
-        while 1:
-            spot_price_lst = data.get_spot_price()
+        try:
+            while 1:
+                spot_price_lst = data.get_spot_price()
+                cur_spot_price = spot_price_lst[0] # TEST
+                spot_price_lbl = self.create_label((spot_price_lst[0] + " " + \
+                                                    spot_price_lst[1]), 750, 250)
+                time.sleep(delay)
+        except RuntimeError:
+            while 1:
+                spot_price_lst = data.get_spot_price()
+                cur_spot_price = spot_price_lst[0] # TEST
+                spot_price_lbl = self.create_label((spot_price_lst[0] + " " + \
+                                                    spot_price_lst[1]), 750, 250)
+                time.sleep(delay)
 
-            cur_spot_price = spot_price_lst[0] # TEST
-
-            spot_price_lbl = self.create_label((spot_price_lst[0] + " " + \
-                                                spot_price_lst[1]), 750, 250)
-            time.sleep(delay)
 
     def draw_buy_price(self, data, delay):
-        while 1:
-            buy_price = data.get_buy_price()
-            buy_price_lbl = self.create_label((buy_price + " USD"), 750, 275)
-            time.sleep(delay)
+        try:
+            while 1:
+                buy_price = data.get_buy_price()
+                buy_price_lbl = self.create_label((buy_price + " USD"), 750, 275)
+                time.sleep(delay)
+        except RuntimeError:
+            while 1:
+                buy_price = data.get_buy_price()
+                buy_price_lbl = self.create_label((buy_price + " USD"), 750, 275)
+                time.sleep(delay)
+
 
     def draw_sell_price(self, data, delay):
-        while 1:
-            sell_price = data.get_sell_price()
-            sell_price_lbl = self.create_label((sell_price + " USD"), 750, 300)
-            time.sleep(delay)
+        try:
+            while 1:
+                sell_price = data.get_sell_price()
+                sell_price_lbl = self.create_label((sell_price + " USD"), 750, 300)
+                time.sleep(delay)
+        except RuntimeError:
+            while 1:
+                sell_price = data.get_sell_price()
+                sell_price_lbl = self.create_label((sell_price + " USD"), 750, 300)
+                time.sleep(delay)
+
 
     def create_label(self, text_param, x_coord, y_coord):
         label = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR,
@@ -452,6 +470,7 @@ class Data_Page(tk.Frame):
 
 
 
+''' BTC analysis Page '''
 class Analysis_Page(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg=BG_COLOR)
@@ -469,16 +488,18 @@ class Analysis_Page(tk.Frame):
         three_mn_lbl = self.create_label("3 Mon.:\t", 800, 130)
         six_mn_lbl = self.create_label("6 Mon.:\t", 800, 160)
 
-        # Buy/Sell title and headers
-        buy_sell_title = self.create_label("Execute Price Limit Buy/Sell", 650, 200, True)
-        buy_sell_status_hdr = self.create_label("Buy/Sell Status: ", 600, 350, True)
+        # account balance, current spot price lbl
+        spot_price_hdr = self.create_label("Current Price:", 600, 225, True)
+        acct_bal_hdr = self.create_label("Current Balance:", 600, 250, True)
 
+        # Buy/Sell title and headers
+        buy_sell_title = self.create_label("Place a Buy or Sell", 650, 200, True)
+        buy_sell_status_hdr = self.create_label("Buy/Sell Status: ", 600, 375, True)
+
+        # buy/sell status messages / confirmations
         status_msg = tk.StringVar()
         buy_sell_msg_lbl = tk.Label(self, bg=BG_COLOR, fg=FG_COLOR, textvariable=status_msg)
-        buy_sell_msg_lbl.place(x=600, y=375)
-
-        # account balance lbl
-
+        buy_sell_msg_lbl.place(x=600, y=400)
 
 
         # plot controller buttons
@@ -514,7 +535,8 @@ class Analysis_Page(tk.Frame):
         buy_sell_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Execute",
                 command=lambda: self.initiate_buy_sell_helper(buy_sell_amt_entry, buy_sell_combo,
                                                               currency_combo, status_msg))
-        buy_sell_btn.place(x=600, y=300)
+
+        buy_sell_btn.place(x=600, y=325)
 
         ''' core functionality section '''
         # retrieve regression analysis data for plotting
@@ -524,13 +546,13 @@ class Analysis_Page(tk.Frame):
         # entry box for buy/sell selection
         default_val = tk.StringVar()
         buy_sell_amt_entry = tk.Entry(self, width=15, textvariable=default_val)
-        buy_sell_amt_entry.place(x=600, y=260)
+        buy_sell_amt_entry.place(x=600, y=300)
         default_val.set("Enter amount")
 
         # combobox for buy/sell selection
         buy_sell_combo = ttk.Combobox(self, width=10, state="readonly")
         buy_sell_combo["values"] = ["Buy", "Sell"]
-        buy_sell_combo.place(x=750, y=260)
+        buy_sell_combo.place(x=750, y=300)
 
         # combobox for currency codes
         xchangert_dict = data.get_exchange_rates()
@@ -540,11 +562,17 @@ class Analysis_Page(tk.Frame):
         currency_lst.sort()
         currency_combo = ttk.Combobox(self, width=5, state="readonly")
         currency_combo["values"] = currency_lst
-        currency_combo.place(x=850, y=260)
+        currency_combo.place(x=850, y=300)
 
 
         # start threaded methods
+        self.start_threads()
+
+    def start_threads(self):
         _thread.start_new_thread(self.draw_perc_change, (30,))
+        _thread.start_new_thread(self.draw_spot_price, (30,))
+        _thread.start_new_thread(self.draw_acct_bal, (30,))
+
 
     def initiate_buy_sell_helper(self, buy_sell_amt_entry, buy_sell_combo, currency_combo, status_msg):
         amount = float(buy_sell_amt_entry.get())
@@ -577,15 +605,38 @@ class Analysis_Page(tk.Frame):
                 acct.execute_sell(amount, currency_code)
                 status_msg.set("Sell order placed.")
                 confirm_btn.destroy()
-                
 
+    def draw_spot_price(self, delay):
+        try:
+            while 1:
+                spot_price = data.get_spot_price()[0]
+                spot_price_lbl_analysis = self.create_label(spot_price + " USD", 725, 225)
+                time.sleep(delay)
+        except RuntimeError:
+            while 1:
+                print("Failed to retrieve spot price in Analysis")
+                print("Trying again")
+                spot_price = data.get_spot_price()
+                spot_price_lbl_analysis = self.creatE_label(spot_price + " USD", 725, 225)
+                time.sleep(delay)
 
-
+    def draw_acct_bal(self, delay):
+        try:
+            while 1:
+                acct_bal = acct.get_acct_balance()
+                acct_bal_lbl = self.create_label(acct_bal[0] + " " + acct_bal[1], 725, 250)
+                time.sleep(delay)
+        except RuntimeError:
+            print("Failed to retrieve acct balance in Analysis")
+            print("Trying again...")
+            while 1:
+                acct_bal = acct.get_acct_balance()
+                acct_bal_lbl = self.create_label(acct_bal[0] + " " + acct_bal[1], 725, 250)
+                time.sleep(delay)
 
 
     def draw_perc_change(self, delay):
         while 1:
-            #test_spot_price = data.get_spot_price()
             one_dy_perc_change = analysis.calc_one_dy_change(data)
             one_wk_perc_change = analysis.calc_one_wk_change(data)
             three_wk_perc_change = analysis.calc_three_wk_change(data)
@@ -638,7 +689,7 @@ class Analysis_Page(tk.Frame):
         # insert an overview of prices of btc
         # for past 3 years
         f = matplotlib.figure.Figure(figsize=(6,5), dpi=100, facecolor=BG_COLOR)
-        a = f.add_subplot(111, ylabel="USD", facecolor=BG_COLOR)
+        a = f.add_subplot(111, xlabel="Days", ylabel="USD", facecolor=BG_COLOR)
 
         plot_title = "BTC Trends"
         a.set_title(plot_title, color=FG_COLOR)
@@ -661,8 +712,6 @@ class Analysis_Page(tk.Frame):
         else:
             a.plot(lst_regr_days, lst_regr_data, ls="--", lw=0.75, color=INC_COLOR)
         
-        labels = a.get_xticklabels()
-        plt.setp(labels, rotation=30) # rotate labels by 30 deg
 
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
@@ -670,6 +719,8 @@ class Analysis_Page(tk.Frame):
 
 
 
+
+''' Main Loop '''
 if __name__ == '__main__':
     # instantiate core class objects
     data = Data()
@@ -679,5 +730,3 @@ if __name__ == '__main__':
 
     app.geometry(str(WIN_LENGTH) + "x" + str(WIN_WIDTH))
     app.mainloop()
-
-
