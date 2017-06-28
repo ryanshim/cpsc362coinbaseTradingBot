@@ -27,12 +27,12 @@ class AccountTest(unittest.TestCase):
     def test_get_last_trans_amt(self):
         acct = Account()
         acct.get_acct_transactions()
-        self.assertEqual(acct.get_last_trans_amt(), ['0.02252686', 'BTC', '51.99', 'USD'])
+        self.assertEqual(acct.get_last_trans_amt(), ['0.00062527', 'BTC', '2.49', 'USD'])
 
     def test_get_last_trans_price(self):
         acct = Account()
         acct.get_acct_transactions()
-        self.assertEqual(acct.get_last_trans_price(), 2307.91)
+        self.assertEqual(acct.get_last_trans_price(), 2.49)
 
 if __name__ == '__main__':
     unittest.main()
