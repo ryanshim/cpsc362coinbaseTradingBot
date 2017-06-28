@@ -24,6 +24,15 @@ class Account():
         self.acct_last_trans_amt = []
         self.acct_last_trans_price = 0
 
+    # retrieve username
+    def get_username(self):
+        auth = CoinbaseWalletAuth()
+        req = requests.get(self.api_url + 'user', auth=auth)
+        output = dict(req.json())
+        name = output['data']['name']
+        return name
+
+
     # retrieve account name
     def get_acct_name(self):
         return self.acct_name
@@ -92,6 +101,7 @@ class Account():
         payload = {'amount': str(amt), 'currency': curr_code, 'payment_method': pmt_id}
 
         req = requests.post(self.api_url + "accounts/" + acct_id + "/buys", data=payload, auth=auth)
+        print(req.status_code)
         print(req.text)
 
     def execute_sell(self, amt, curr_code):
@@ -111,10 +121,8 @@ class Account():
 
         req = requests.post(self.api_url + "accounts/" + acct_id + "/sells", data=payload, auth=auth)
         print(req.status_code)
+        print(req.text)
 
-        print(acct_id)
-        print(pmt_id)
-        print(payload)
 
 
 
