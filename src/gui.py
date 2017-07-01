@@ -36,7 +36,7 @@ DEC_COLOR = "#AB0000"
 class Gui(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        tk.Tk.wm_title(self, "CB Trading Bot")
+        tk.Tk.wm_title(self, "CB Trading Utility")
 
         container = tk.Frame(self)
         container.pack(side='top', fill='both', expand=True)
@@ -586,14 +586,14 @@ class Analysis_Page(tk.Frame):
                            " " + currency_code + " at price " + spot_price)
             confirm_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Confirm",
                                     command=lambda: btn_group_action(amount, currency_code, buy_sell, status_msg))
-            confirm_btn.place(x=600, y=410)
+            confirm_btn.place(x=600, y=450)
 
         elif buy_sell == "Sell":
             status_msg.set("You are about to sell " + str(amount) + \
                            " " + currency_code + " at price " + spot_price)
             confirm_btn = tk.Button(self, bg=BG_COLOR, fg=FG_COLOR, text="Confirm",
                                     command=lambda: btn_group_action(amount, currency_code, buy_sell, status_msg))
-            confirm_btn.place(x=600, y=410)
+            confirm_btn.place(x=600, y=450)
 
 
         def btn_group_action(amount, currency_code, buy_sell, status_msg):
