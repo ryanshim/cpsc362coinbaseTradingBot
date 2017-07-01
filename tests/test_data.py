@@ -7,29 +7,20 @@ import unittest
 from data import Data
 
 class DataTest(unittest.TestCase):
-    def test_get_spot_price(self):
-        data_1 = Data()
-        self.assertEqual('data_1.get_spot_price()', 'data_1.get_spot_price()')
 
-    def test_get_price_hist_6_mon(self):
+    # this next test should output 0 since there 
+    # is no update required
+    def test_get_3yr_daily_price(self):
         data_1 = Data()
-        self.assertEqual(data_1.get_price_hist_6_mon(), '')
+        self.assertEqual(data_1.get_3yr_daily_price(), 0)
 
-    def test_get_price_hist_cur_mon(self):
-        data_1 = Data()
-        self.assertEqual(data_1.get_price_hist_cur_mon(), '')
+    # this test should output the date of the last
+    # update in the first line of the file
+    def test_last_update(self):
+        with open('prices.txt', 'r') as infile:
+            last_update = infile.readline()
+        self.assertEqual(last_update, "2017-06-30\n")
 
-    def test_get_price_hist_cur_wk(self):
-        data_1 = Data()
-        self.assertEqual(data_1.get_price_hist_cur_wk(), '')
-
-    def test_get_price_hist_cur_hr(self):
-        data_1 = Data()
-        self.assertEqual(data_1.get_price_hist_cur_hr(), '')
-
-    def test_get_exchange_rates(self):
-        data_1 = Data()
-        self.assertEqual(data_1.get_exchange_rates(), '')
 
 if __name__ == '__main__':
     unittest.main()
