@@ -1,4 +1,4 @@
-# cpsc362coinbaseTradingBot
+# cpsc362coinbaseTradingUtility
 Project for CPSC 362 - Foundations of Software Engineering.
 
 ###### Team Members
