@@ -182,9 +182,10 @@ class Data():
                 outfile.write(line)
 
             outfile.close() 
-            print("Prices saved")
+            print("New prices saved")
             return days_delta
         else:
+            print("No update required")
             return 0
 
 
