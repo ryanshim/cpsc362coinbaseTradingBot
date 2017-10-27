@@ -1,6 +1,8 @@
 # cpsc362coinbaseTradingUtility
 Project for CPSC 362 - Foundations of Software Engineering.
 
+*Note: This project is a wholly unfinished piece of software complete with bugs. This software was more for API exploration and simple data analysis.
+
 ###### Team Members
 * Pablo Pelayo - jrpelayo13@csu.fullerton.edu
 * Kevin Pham - kpham163@csu.fullerton.edu
